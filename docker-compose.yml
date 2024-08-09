@@ -1,7 +1,8 @@
-version: '3.8'
+version: '3.9'
 services:
-  thorv2-redis:
+  redis:
     image: 'redis/redis-stack:latest'
+    container_name: 'elios_redis'
     ports:
       - '6379:6379'
       - '8350:8001'
@@ -9,6 +10,15 @@ services:
       - powens_network
     volumes:
       - powens_volume:/data
+  postgres:
+    image: 'postgres'
+    ports:
+      - '5444:5432'
+    container_name: 'elios_backend'
+    environment:
+      - POSTGRES_USER=elios_db
+      - POSTGRES_DB=elios
+      - POSTGRES_PASSWORD=eliosbackendpassword
 
 networks:
   powens_network:

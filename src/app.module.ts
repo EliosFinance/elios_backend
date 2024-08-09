@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { UserModule } from "./user/user.module";
 import { TransactionsModule } from './transactions/transactions.module';
+import 'dotenv/config';
 
 @Module({
   imports: [
@@ -14,9 +15,9 @@ import { TransactionsModule } from './transactions/transactions.module';
       type: 'postgres',
       host: 'localhost',
       port: 5444,
-      username: 'toursapi',
-      password: 'toursapi',
-      database: 'toursdb',
+      username: String(process.env.POSTGRES_USER),
+      password: String(process.env.POSTGRES_PASSWORD),
+      database: String(process.env.POSTGRES_DB),
       entities: ['**/entity/*.entity.ts'],
       synchronize: true,
       autoLoadEntities: true,

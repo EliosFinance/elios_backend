@@ -4,7 +4,7 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import Redis from 'ioredis';
-import { ConfigService } from '@nestjs/config';
+import 'dotenv/config';
 
 export class InvalidatedRefreshTokenError extends Error {}
 
