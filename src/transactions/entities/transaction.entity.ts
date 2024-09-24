@@ -1,44 +1,44 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { User } from "../../users/entities/user.entity";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class Transaction {
-  @PrimaryGeneratedColumn()
-  id: number;
+    @PrimaryGeneratedColumn()
+    id: number;
 
-  @Column()
-  id_account: number;
+    @Column()
+    id_account: number;
 
-  @Column()
-  date: string;
+    @Column()
+    date: string;
 
-  @Column('numeric', { nullable: true })
-  value: number;
+    @Column('numeric', { nullable: true })
+    value: number;
 
-  @Column('numeric', { nullable: true })
-  gross_value: number;
+    @Column('numeric', { nullable: true })
+    gross_value: number;
 
-  @Column()
-  type: string;
+    @Column()
+    type: string;
 
-  @Column()
-  original_wording: string;
+    @Column()
+    original_wording: string;
 
-  @Column()
-  simplified_wording: string;
+    @Column()
+    simplified_wording: string;
 
-  @Column({ nullable: true })
-  wording: string;
+    @Column({ nullable: true })
+    wording: string;
 
-  @Column('simple-array', { nullable: true })
-  categories: [];
+    @Column('simple-array', { nullable: true })
+    categories: [];
 
-  @Column()
-  date_scraped: string;
+    @Column()
+    date_scraped: string;
 
-  @ManyToOne(() => User, (user) => user.transactions)
-  user: User;
+    @ManyToOne(() => User, (user) => user.transactions)
+    user: User;
 
-  @CreateDateColumn()
-  date_recorded: Date;
+    @CreateDateColumn()
+    date_recorded: Date;
 }
