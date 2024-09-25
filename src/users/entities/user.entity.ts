@@ -1,5 +1,5 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Transaction } from '../../transactions/entities/transaction.entity';
 
 @Entity()
@@ -16,7 +16,10 @@ export class User {
     @Column({ nullable: true })
     powens_token: string;
 
-    @OneToMany(() => Transaction, (transaction) => transaction.user)
+    @OneToMany(
+        () => Transaction,
+        (transaction) => transaction.user,
+    )
     transactions: Transaction[];
 
     async validatePassword(password: string): Promise<boolean> {

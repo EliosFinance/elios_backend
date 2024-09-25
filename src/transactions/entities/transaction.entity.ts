@@ -36,7 +36,10 @@ export class Transaction {
     @Column()
     date_scraped: string;
 
-    @ManyToOne(() => User, (user) => user.transactions)
+    @ManyToOne(
+        () => User,
+        (user) => user.transactions,
+    )
     user: User;
 
     @CreateDateColumn()

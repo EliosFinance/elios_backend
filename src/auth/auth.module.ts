@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-import { UsersModule } from '../users/users.module';
-import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from './strategy/jwt.strategy';
+import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
+import { UsersModule } from '../users/users.module';
 import { UsersService } from '../users/users.service';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
-import { LocalStrategy } from './strategy/local.strategy';
 import { JwtRefreshTokenStrategy } from './strategy/jwt-refresh-token.strategy';
+import { JwtStrategy } from './strategy/jwt.strategy';
+import { LocalStrategy } from './strategy/local.strategy';
 import 'dotenv/config';
 
 @Module({

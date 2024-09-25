@@ -1,6 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { UsersService } from '../users/users.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
 import { JwtRefreshTokenStrategy } from './strategy/jwt-refresh-token.strategy';
