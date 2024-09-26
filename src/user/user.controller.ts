@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { UserService } from './user.service';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Public } from '../auth/decorator/public.decorator';
+import { LocalAuthGuard } from '../auth/guards/local-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { LocalAuthGuard } from '../auth/guards/local-auth.guard';
-import { Public } from '../auth/decorator/public.decorator';
+import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {

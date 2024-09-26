@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# TODO: npm test && npm run lint
-npm run lint
+yarn biome check --write --config-path=./biome.json --staged .
+git add .

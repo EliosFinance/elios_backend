@@ -1,10 +1,10 @@
-import { Controller, Redirect, Get, Query, Req } from '@nestjs/common';
-import { PowensService } from './powens.service';
-import { lastValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
-import { UsersService } from '../users/users.service';
+import { Controller, Get, Query, Redirect, Req } from '@nestjs/common';
+import { lastValueFrom } from 'rxjs';
 import { Public } from '../auth/decorator/public.decorator';
 import { TransactionsService } from '../transactions/transactions.service';
+import { UsersService } from '../users/users.service';
+import { PowensService } from './powens.service';
 
 @Controller('powens')
 export class PowensController {

@@ -1,12 +1,12 @@
 import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { UsersService } from 'src/users/users.service';
 import { RegisterUserDto } from 'src/users/dto/register-user.dto';
+import { UsersService } from 'src/users/users.service';
+import { AuthService } from './auth.service';
 import { Public } from './decorator/public.decorator';
-import { SignInDto } from './dto/sign-in.dto';
-import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
