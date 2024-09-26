@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Transaction } from '../../transactions/entities/transaction.entity';
 
 @Entity()
@@ -21,6 +21,23 @@ export class User {
         (transaction) => transaction.user,
     )
     transactions: Transaction[];
+
+    @ManyToMany(
+        () => User,
+        (user) => user.friends,
+    )
+    @JoinTable({
+        name: 'user_friends',
+        joinColumn: {
+            name: 'user_id',
+            referencedColumnName: 'id',
+        },
+        inverseJoinColumn: {
+            name: 'friend_id',
+            referencedColumnName: 'id',
+        },
+    })
+    friends: User[];
 
     async validatePassword(password: string): Promise<boolean> {
         return bcrypt.compare(password, this.password);
