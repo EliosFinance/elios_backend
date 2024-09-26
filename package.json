@@ -19,7 +19,9 @@
         "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
         "test:e2e": "jest --config ./test/jest-e2e.json",
         "prepare": "husky install",
-        "commit": "cz"
+        "commit": "cz",
+        "genDocu": "npx @compodoc/compodoc -p ./tsconfig.json -n 'Elios backend documentation'",
+        "serveDocu": "npx @compodoc/compodoc -s"
     },
     "dependencies": {
         "@commitlint/cli": "^19.5.0",
@@ -53,6 +55,7 @@
         "@biomejs/biome": "1.9.2",
         "@commitlint/cz-commitlint": "^19.5.0",
         "@commitlint/is-ignored": "^19.5.0",
+        "@compodoc/compodoc": "^1.1.25",
         "@nestjs/cli": "^10.0.0",
         "@nestjs/schematics": "^10.0.0",
         "@nestjs/testing": "^10.0.0",
