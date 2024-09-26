@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Controller, Get, Query, Redirect, Req } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { lastValueFrom } from 'rxjs';
 import { Public } from '../auth/decorator/public.decorator';
 import { TransactionsService } from '../transactions/transactions.service';
@@ -7,6 +8,7 @@ import { UsersService } from '../users/users.service';
 import { PowensService } from './powens.service';
 
 @Controller('powens')
+@ApiTags('Powens')
 export class PowensController {
     constructor(
         private readonly httpService: HttpService,
