@@ -1,4 +1,5 @@
 import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { RegisterUserDto } from 'src/users/dto/register-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { AuthService } from './auth.service';
@@ -10,6 +11,7 @@ import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
+@ApiTags('Auth')
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
