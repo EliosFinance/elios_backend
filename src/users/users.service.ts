@@ -21,14 +21,16 @@ export class UsersService {
         return this.userRepository.save(user);
     }
 
-    findAll() {
-        return `This action returns all users`;
+    findAll(): Promise<User[]> {
+        return this.userRepository.find({
+            relations: ['transactions', 'friends'],
+        });
     }
 
     findOne(id: number): Promise<User> {
         return this.userRepository.findOne({
             where: { id },
-            relations: ['transactions'],
+            relations: ['transactions', 'friends'],
         });
     }
 
