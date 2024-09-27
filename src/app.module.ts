@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ArticlesModule } from './articles/articles.module';
 import { AuthModule } from './auth/auth.module';
 import { PowensModule } from './powens/powens.module';
 import { TransactionsModule } from './transactions/transactions.module';
@@ -26,6 +27,7 @@ import 'dotenv/config';
         AuthModule,
         UsersModule,
         TransactionsModule,
+        ArticlesModule,
     ],
     controllers: [AppController],
     providers: [AppService],
