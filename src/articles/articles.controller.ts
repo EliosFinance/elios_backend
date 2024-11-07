@@ -39,4 +39,9 @@ export class ArticlesController {
     addLike(@Param('id') id: string, @Body() addLikeDto: AddLikeDto) {
         return this.articlesService.addLike(+id, addLikeDto);
     }
+
+    @Put(':id/views')
+    incrementViews(@Param('id') id: string) {
+        return this.articlesService.incrementViews(+id);
+    }
 }

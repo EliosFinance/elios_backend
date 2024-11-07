@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, UpdateResult } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { AddLikeDto } from './dto/add-like.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -77,5 +77,9 @@ export class ArticlesService {
         }
 
         return this.articleRepository.save(article);
+    }
+
+    async incrementViews(id: number): Promise<UpdateResult> {
+        return this.articleRepository.increment({ id }, 'views', 1);
     }
 }

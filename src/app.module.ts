@@ -4,6 +4,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
 import { AuthModule } from './auth/auth.module';
+import { ChallengesModule } from './challenges/challenges.module';
+import { EnterprisesModule } from './enterprises/enterprises.module';
 import { PowensModule } from './powens/powens.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
@@ -28,6 +30,8 @@ import 'dotenv/config';
         UsersModule,
         TransactionsModule,
         ArticlesModule,
+        EnterprisesModule,
+        ChallengesModule,
     ],
     controllers: [AppController],
     providers: [AppService],
