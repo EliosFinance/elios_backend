@@ -5,9 +5,10 @@ import { User } from '../users/entities/user.entity';
 import { ChallengesController } from './challenges.controller';
 import { ChallengesService } from './challenges.service';
 import { Challenge } from './entities/challenge.entity';
+import { UserToChallenge } from './entities/usertochallenge.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Challenge, Enterprise, User])],
+    imports: [TypeOrmModule.forFeature([Challenge, Enterprise, User, UserToChallenge])],
     controllers: [ChallengesController],
     providers: [ChallengesService],
 })

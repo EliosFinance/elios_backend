@@ -2,6 +2,7 @@ import * as bcrypt from 'bcrypt';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Article } from '../../articles/entities/article.entity';
 import { Challenge } from '../../challenges/entities/challenge.entity';
+import { UserToChallenge } from '../../challenges/entities/usertochallenge.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
 
 @Entity()
@@ -53,11 +54,11 @@ export class User {
     )
     likedArticles: Article[];
 
-    @ManyToMany(
-        () => Challenge,
-        (challenge) => challenge.users,
+    @OneToMany(
+        () => UserToChallenge,
+        (userToChallenge) => userToChallenge.user,
     )
-    challenges: Challenge[];
+    userToChallenge: UserToChallenge[];
 
     async validatePassword(password: string): Promise<boolean> {
         return bcrypt.compare(password, this.password);

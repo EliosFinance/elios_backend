@@ -1,6 +1,7 @@
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Enterprise } from '../../enterprises/entities/enterprise.entity';
 import { User } from '../../users/entities/user.entity';
+import { UserToChallenge } from './usertochallenge.entity';
 
 export enum CategoryChallenge {
     BUDGET = 'Budget',
@@ -25,6 +26,12 @@ export class Challenge {
     @Column()
     image: string;
 
+    @OneToMany(
+        () => UserToChallenge,
+        (userToChallenge) => userToChallenge.challenge,
+    )
+    userToChallenge: UserToChallenge[];
+
     @ManyToOne(
         () => Enterprise,
         (enterprise) => enterprise.challenge,
@@ -37,15 +44,4 @@ export class Challenge {
         default: CategoryChallenge.BUDGET,
     })
     category: CategoryChallenge;
-
-    @ManyToMany(
-        () => User,
-        (user) => user.challenges,
-    )
-    @JoinTable({
-        name: 'challenges_users',
-        joinColumn: { name: 'challenge_id', referencedColumnName: 'id' },
-        inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
-    })
-    users: User[];
 }
