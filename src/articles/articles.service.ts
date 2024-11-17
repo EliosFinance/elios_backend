@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository, UpdateResult } from 'typeorm';
+import { ArticleCategory } from '../article-category/entities/article-category.entity';
+import { ArticleContent } from '../article-content/entities/article-content.entity';
 import { User } from '../users/entities/user.entity';
 import { AddLikeDto } from './dto/add-like.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -14,24 +16,57 @@ export class ArticlesService {
         private readonly articleRepository: Repository<Article>,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        @InjectRepository(ArticleCategory)
+        private readonly articleCategoryRepository: Repository<ArticleCategory>,
+        @InjectRepository(ArticleContent)
+        private readonly articleContentRepository: Repository<ArticleContent>,
     ) {}
 
     async create(createArticleDto: CreateArticleDto): Promise<Article> {
-        const { title, description, content, authorIds } = createArticleDto;
-
-        const authors = await this.userRepository.findBy({ id: In(authorIds) });
-        if (!authors || authors.length !== authorIds.length) {
+        const { title, description, authorIds, thumbnail, isPremium, categoryId, readingTime, contents } =
+            createArticleDto;
+        let category = null;
+        let authors = [];
+        console.log('content', contents);
+        if (authorIds && authorIds.length > 0) {
+            authors = await this.userRepository.findBy({ id: In(authorIds) });
+        }
+        if (categoryId) {
+            category = await this.articleCategoryRepository.findOneBy({ id: categoryId });
+        }
+        if (!authors || authors.length < 1 || authors.length !== authorIds.length) {
             throw new NotFoundException('One or more authors not found');
+        }
+        console.log('category', category);
+        if (!category) {
+            throw new NotFoundException('Category not found');
         }
 
         const newArticle = this.articleRepository.create({
             title,
             description,
-            content,
             authors,
+            thumbnail,
+            isPremium,
+            category,
+            readingTime,
         });
 
-        return this.articleRepository.save(newArticle);
+        const savedArticle = await this.articleRepository.save(newArticle);
+
+        if (contents && contents.length > 0) {
+            const articleContents = contents.map((contentData) => {
+                const newContent = this.articleContentRepository.create({
+                    ...contentData,
+                    article: savedArticle,
+                });
+                return this.articleContentRepository.save(newContent);
+            });
+
+            await Promise.all(articleContents);
+        }
+
+        return savedArticle;
     }
 
     async findAll(): Promise<Article[]> {
