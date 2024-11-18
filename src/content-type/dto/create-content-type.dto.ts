@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, IsInt, IsOptional, ValidateNested } from 'class-validator';
+import { IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, ValidateNested } from 'class-validator';
 import { ContentTypeCategory } from '../entities/content-type.entity';
 
 export class CreateContentTypeDto {
@@ -10,5 +10,6 @@ export class CreateContentTypeDto {
     text: string[];
 
     @IsInt()
-    cardId: number;
+    @IsNotEmpty({ message: 'The articleContentId field cannot by empty.' })
+    articleContentId: number;
 }

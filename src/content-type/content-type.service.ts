@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ArticleContent } from '../article-content/entities/article-content.entity';
 import { CreateContentTypeDto } from './dto/create-content-type.dto';
 import { ContentType } from './entities/content-type.entity';
 
@@ -9,10 +10,25 @@ export class ContentTypeService {
     constructor(
         @InjectRepository(ContentType)
         private readonly contentTypeRepository: Repository<ContentType>,
+        @InjectRepository(ArticleContent)
+        private readonly articleContentRepository: Repository<ArticleContent>,
     ) {}
 
     async create(createContentTypeDto: CreateContentTypeDto): Promise<ContentType> {
-        const contentType = this.contentTypeRepository.create(createContentTypeDto);
+        if (!createContentTypeDto.articleContentId) {
+            throw new BadRequestException('articleContentId is required and cannot be empty.');
+        }
+        const articleContent = await this.articleContentRepository.findOne({
+            where: { id: createContentTypeDto.articleContentId },
+        });
+        if (!articleContent) {
+            throw new NotFoundException('Article content not found');
+        }
+
+        const contentType = this.contentTypeRepository.create({
+            ...createContentTypeDto,
+            articleContent,
+        });
         return this.contentTypeRepository.save(contentType);
     }
 

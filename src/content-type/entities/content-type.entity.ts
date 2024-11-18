@@ -31,5 +31,5 @@ export class ContentType {
         () => ArticleContent,
         (articleContent) => articleContent.contentType,
     )
-    card: ArticleContent;
+    articleContent: ArticleContent;
 }

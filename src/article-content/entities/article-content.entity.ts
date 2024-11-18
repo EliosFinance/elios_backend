@@ -45,7 +45,7 @@ export class ArticleContent {
 
     @OneToMany(
         () => ContentType,
-        (contentType) => contentType.card,
+        (contentType) => contentType.articleContent,
     )
     contentType: ContentType[];
 
