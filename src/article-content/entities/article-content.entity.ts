@@ -1,4 +1,4 @@
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Article } from '../../articles/entities/article.entity';
 import { ContentType } from '../../content-type/entities/content-type.entity';
 import { User } from '../../users/entities/user.entity';
@@ -56,7 +56,7 @@ export class ArticleContent {
     })
     type: ArticleContentType;
 
-    @ManyToMany(
+    @ManyToOne(
         () => Article,
         (article) => article.articleContent,
     )
