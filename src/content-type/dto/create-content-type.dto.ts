@@ -3,6 +3,7 @@ import { ContentTypeCategory } from '../entities/content-type.entity';
 
 export class CreateContentTypeDto {
     @IsEnum(ContentTypeCategory, { message: 'The "type" field must be a valid ContentTypeCategory value.' })
+    @IsNotEmpty({ message: 'The "type" field must not be empty.' })
     type: ContentTypeCategory;
 
     @IsArray({ message: 'The "text" field must be an array of strings.' })

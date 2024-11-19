@@ -19,14 +19,16 @@ async function bootstrap() {
             forbidNonWhitelisted: true, // Empêche les champs non définis dans le DTO
             transform: true, // Transforme les types automatiquement (e.g., string en number)
             exceptionFactory: (errors) => {
-                return new BadRequestException(
-                    errors.map((err) => ({
-                        field: err.property,
-                        message: err?.constraints
-                            ? Object.values(err.constraints).join(', ')
-                            : 'Validation failed without specific constraints',
-                    })),
-                );
+              return new BadRequestException(
+                errors.map((err) =>
+                err?.constraints
+                  ? Object.values(err.constraints).map((message) => ({
+                    field: err.property,
+                    message
+                  }))
+                  : [{ field: err.property, message: 'Validation failed without specific constraints' }]
+                )
+              );
             },
         }),
     );

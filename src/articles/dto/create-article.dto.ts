@@ -16,6 +16,7 @@ export class CreateArticleDto {
     authorIds: number[];
 
     @ValidateNested({ each: true })
+    @IsArray({ message: "Le champ 'contents' doit être un tableau d'éléments" })
     @Type(() => CreateArticleContentDto)
     contents: CreateArticleContentDto[];
 
@@ -27,6 +28,7 @@ export class CreateArticleDto {
     @IsBoolean()
     isPremium?: boolean;
 
+    @IsNotEmpty()
     @IsInt()
     categoryId: number;
 
