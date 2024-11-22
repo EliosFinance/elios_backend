@@ -1,4 +1,12 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinColumn,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Challenge } from './challenge.entity';
 
@@ -36,4 +44,7 @@ export class UserToChallenge {
 
     @CreateDateColumn()
     creation_date: Date;
+
+    @UpdateDateColumn()
+    update_date: Date;
 }

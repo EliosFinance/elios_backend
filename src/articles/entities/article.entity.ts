@@ -7,6 +7,7 @@ import {
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
+    UpdateDateColumn,
 } from 'typeorm';
 import { ArticleCategory } from '../../article-category/entities/article-category.entity';
 import { ArticleContent } from '../../article-content/entities/article-content.entity';
@@ -93,6 +94,7 @@ export class Article {
     @ManyToOne(
         () => ArticleCategory,
         (articleCategory) => articleCategory.articles,
+        { onDelete: 'CASCADE' },
     )
     // Obligatoire
     category: ArticleCategory;
@@ -109,4 +111,7 @@ export class Article {
 
     @CreateDateColumn()
     creation_date: Date;
+
+    @UpdateDateColumn()
+    update_date: Date;
 }

@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Challenge } from '../../challenges/entities/challenge.entity';
 
 @Entity()
@@ -14,9 +14,6 @@ export class Enterprise {
     // Obligatoire
     description: string;
 
-    @CreateDateColumn()
-    creation_date: Date;
-
     @OneToMany(
         () => Challenge,
         (challenge) => challenge.enterprise,
@@ -24,4 +21,9 @@ export class Enterprise {
     challenge: Challenge[];
 
     // Logo
+    @CreateDateColumn()
+    creation_date: Date;
+
+    @UpdateDateColumn()
+    update_date: Date;
 }

@@ -7,6 +7,7 @@ import {
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
+    UpdateDateColumn,
 } from 'typeorm';
 import { Enterprise } from '../../enterprises/entities/enterprise.entity';
 import { User } from '../../users/entities/user.entity';
@@ -61,4 +62,7 @@ export class Challenge {
 
     @CreateDateColumn()
     creation_date: Date;
+
+    @UpdateDateColumn()
+    update_date: Date;
 }

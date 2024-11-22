@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm';
 import { ArticleContent } from '../../article-content/entities/article-content.entity';
 
 export enum ContentTypeCategory {
@@ -36,4 +45,7 @@ export class ContentType {
 
     @CreateDateColumn()
     creation_date: Date;
+
+    @UpdateDateColumn()
+    update_date: Date;
 }

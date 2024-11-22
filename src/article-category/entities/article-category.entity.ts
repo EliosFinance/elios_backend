@@ -1,4 +1,12 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm';
 import { Article } from '../../articles/entities/article.entity';
 
 @Entity()
@@ -7,23 +15,29 @@ export class ArticleCategory {
     id: number;
 
     @Column()
-    // Obligatoire
     title: string;
 
-    @Column()
-    // Optionel
+    @Column({
+        nullable: true,
+    })
     description: string;
 
     @Column()
-    // Obligatoire
     icon: string;
 
     @OneToMany(
         () => Article,
         (article) => article.category,
+        {
+            cascade: ['remove'],
+            onDelete: 'CASCADE',
+        },
     )
     articles: Article[];
 
     @CreateDateColumn()
     creation_date: Date;
+
+    @UpdateDateColumn()
+    update_date: Date;
 }

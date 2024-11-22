@@ -5,8 +5,8 @@ export class CreateArticleCategoryDto {
     @IsString()
     title: string;
 
-    @IsNotEmpty({ message: "The 'description' field is required" })
-    @IsString()
+    @IsOptional()
+    @IsString({ message: "The 'description' field must be a string" })
     description: string;
 
     @IsNotEmpty({ message: "The 'type' field is required" })

@@ -1,5 +1,14 @@
 import * as bcrypt from 'bcrypt';
-import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    OneToMany,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm';
 import { ArticleCategory } from '../../article-category/entities/article-category.entity';
 import { ArticleContent } from '../../article-content/entities/article-content.entity';
 import { Article } from '../../articles/entities/article.entity';
@@ -88,6 +97,9 @@ export class User {
 
     @CreateDateColumn()
     creation_date: Date;
+
+    @UpdateDateColumn()
+    update_date: Date;
 
     async validatePassword(password: string): Promise<boolean> {
         return bcrypt.compare(password, this.password);

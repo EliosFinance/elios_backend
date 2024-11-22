@@ -7,6 +7,7 @@ import {
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
+    UpdateDateColumn,
 } from 'typeorm';
 import { Article } from '../../articles/entities/article.entity';
 import { ContentType } from '../../content-type/entities/content-type.entity';
@@ -78,4 +79,7 @@ export class ArticleContent {
 
     @CreateDateColumn()
     creation_date: Date;
+
+    @UpdateDateColumn()
+    update_date: Date;
 }
