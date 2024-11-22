@@ -1,5 +1,7 @@
 import * as bcrypt from 'bcrypt';
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { ArticleCategory } from '../../article-category/entities/article-category.entity';
+import { ArticleContent } from '../../article-content/entities/article-content.entity';
 import { Article } from '../../articles/entities/article.entity';
 import { Challenge } from '../../challenges/entities/challenge.entity';
 import { UserToChallenge } from '../../challenges/entities/usertochallenge.entity';
@@ -59,6 +61,33 @@ export class User {
         (userToChallenge) => userToChallenge.user,
     )
     userToChallenge: UserToChallenge[];
+
+    @ManyToMany(
+        () => Article,
+        (article) => article.reads,
+    )
+    readArticles: Article[];
+
+    @ManyToMany(
+        () => ArticleContent,
+        (articleContent) => articleContent.reads,
+    )
+    readArticleContent: ArticleContent[];
+
+    @ManyToMany(
+        () => Article,
+        (article) => article.saved,
+    )
+    savedArticles: Article[];
+
+    @ManyToMany(
+        () => ArticleContent,
+        (articleContent) => articleContent.saved,
+    )
+    savedArticlesContent: Article[];
+
+    @CreateDateColumn()
+    creation_date: Date;
 
     async validatePassword(password: string): Promise<boolean> {
         return bcrypt.compare(password, this.password);
