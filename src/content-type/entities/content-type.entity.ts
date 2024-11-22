@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { ArticleContent } from '../../article-content/entities/article-content.entity';
 
 export enum ContentTypeCategory {
@@ -30,6 +30,10 @@ export class ContentType {
     @ManyToOne(
         () => ArticleContent,
         (articleContent) => articleContent.contentType,
+        { onDelete: 'CASCADE' },
     )
     articleContent: ArticleContent;
+
+    @CreateDateColumn()
+    creation_date: Date;
 }

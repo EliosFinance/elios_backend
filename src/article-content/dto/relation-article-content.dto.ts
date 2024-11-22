@@ -1,16 +1,12 @@
-import { IsInt, IsNotEmpty } from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty } from 'class-validator';
 
-export class AddLikeDto {
-    userId: number;
-}
-
-export class readUserArticle {
+export class readUser {
     @IsNotEmpty({ message: "The 'userId' field is required" })
     @IsInt({ message: "The 'userId' must be a user id number" })
     userId: number;
 }
 
-export class saveUserArticle {
+export class saveUser {
     @IsNotEmpty({ message: "The 'userId' field is required" })
     @IsInt({ message: "The 'userId' must be a user id number" })
     userId: number;

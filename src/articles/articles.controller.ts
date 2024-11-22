@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ArticlesService } from './articles.service';
-import { AddLikeDto } from './dto/add-like.dto';
+import { AddLikeDto, readUserArticle, saveUserArticle } from './dto/add-like.dto';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
@@ -43,5 +43,15 @@ export class ArticlesController {
     @Put(':id/views')
     incrementViews(@Param('id') id: string) {
         return this.articlesService.incrementViews(+id);
+    }
+
+    @Put(':id/read')
+    addRead(@Param('id') id: number, @Body() addRead: readUserArticle) {
+        return this.articlesService.addRead(+id, addRead);
+    }
+
+    @Put(':id/save')
+    addSave(@Param('id') id: number, @Body() addSave: saveUserArticle) {
+        return this.articlesService.addSave(+id, addSave);
     }
 }

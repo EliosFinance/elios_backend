@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ContentTypeService } from './content-type.service';
 import { CreateContentTypeDto } from './dto/create-content-type.dto';
+import { UpdateContentTypeDto } from './dto/update-content-type.dto';
 import { ContentType } from './entities/content-type.entity';
 
 @Controller('content-type')
@@ -22,9 +23,9 @@ export class ContentTypeController {
         return this.contentTypeService.findOne(id);
     }
 
-    @Put(':id')
-    async update(@Param('id') id: number, @Body() updateData: Partial<ContentType>): Promise<ContentType> {
-        return this.contentTypeService.update(id, updateData);
+    @Patch(':id')
+    async update(@Param('id') id: number, @Body() updateContentTypeDto: UpdateContentTypeDto): Promise<ContentType> {
+        return this.contentTypeService.update(id, updateContentTypeDto);
     }
 
     @Delete(':id')

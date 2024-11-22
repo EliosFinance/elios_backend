@@ -5,7 +5,8 @@ import { Article } from '../articles/entities/article.entity';
 import { ContentType } from '../content-type/entities/content-type.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateArticleContentDto } from './dto/create-article-content-dto';
-import { UpdateArticleContentDto } from './dto/update-article-content-dto';
+import { readUser, saveUser } from './dto/relation-article-content.dto';
+import { UpdateArticleContentDto, UpdateMode } from './dto/update-article-content-dto';
 import { ArticleContent } from './entities/article-content.entity';
 
 @Injectable()
@@ -28,7 +29,6 @@ export class ArticleContentService {
         const errors: string[] = [];
         let reads = [];
         let saved = [];
-        let article = null;
 
         // Vérification des readsUserId
         if (readsUserId && readsUserId.length > 0) {
@@ -50,11 +50,13 @@ export class ArticleContentService {
         }
 
         // Vérification de l'article
-        if (articleId) {
-            article = await this.articleRepository.findOneBy({ id: articleId });
-            if (!article) {
-                errors.push(`The articleId '${articleId}' was not found.`);
-            }
+        if (!articleId) {
+            throw new BadRequestException('The articleId "' + articleId + '" does not exist');
+        }
+
+        const article = await this.articleRepository.findOneBy({ id: articleId });
+        if (!article) {
+            errors.push(`The articleId '${articleId}' was not found.`);
         }
 
         if (errors.length > 0) {
@@ -64,7 +66,7 @@ export class ArticleContentService {
             });
         }
 
-        return await this.dataSource.transaction(async (manager) => {
+        const savedArticleContent = await this.dataSource.transaction(async (manager) => {
             const newArticleContent = manager.create(ArticleContent, {
                 image,
                 type,
@@ -76,53 +78,33 @@ export class ArticleContentService {
 
             const savedArticleContent = await manager.save(ArticleContent, newArticleContent);
 
-            if (contentType && contentType.length > 0) {
-                const contentTypes = contentType.map((contentTypeData) => {
-                    return manager.create('ContentType', {
-                        ...contentTypeData,
-                        articleContent: savedArticleContent,
-                    });
+            const contentTypes = contentType.map((contentTypeData) => {
+                return manager.create('ContentType', {
+                    ...contentTypeData,
+                    articleContent: savedArticleContent,
                 });
+            });
 
-                await manager.save('ContentType', contentTypes);
-            }
+            await manager.save('ContentType', contentTypes);
             return savedArticleContent;
         });
 
-        // Création d'un nouvel article de contenu
-        // const newArticleContent = this.articleContentRepository.create({
-        //     image,
-        //     type,
-        //     title,
-        //     reads: reads.length > 0 ? reads : null, // Utilisation de null si aucune donnée
-        //     saved: saved.length > 0 ? saved : null,
-        //     article: article || null,
-        // });
-        //
-        // const savedArticleContent = await this.articleContentRepository.save(newArticleContent)
-        //
-        // if (contentType && contentType.length > 0) {
-        //     console.log('contentType', contentType);
-        //     const contentTypes = contentType.map((contentTypeData) => {
-        //         const newContentType = this.contentTypeRepository.create({
-        //             ...contentTypeData,
-        //             articleContent: savedArticleContent
-        //         })
-        //         return this.contentTypeRepository.save(newContentType);
-        //     })
-        //     await Promise.all(contentTypes)
-        // }
-        //
-        // return savedArticleContent;
+        const loadedArticleContent = await this.articleContentRepository.findOne({
+            where: { id: savedArticleContent.id },
+            relations: ['reads', 'saved', 'article', 'contentType'],
+        });
+
+        return loadedArticleContent;
     }
 
     async findAll(type?: string) {
-        return this.articleContentRepository.find();
+        return this.articleContentRepository.find({ relations: ['reads', 'saved', 'article', 'contentType'] });
     }
 
     async findOne(id: number) {
         const articleContent = await this.articleContentRepository.findOne({
-            where: { id },
+            where: { id: id },
+            relations: { reads: true, saved: true, article: true, contentType: true },
         });
         if (!articleContent) {
             throw new NotFoundException(`ArticleContent with id ${id} not found`);
@@ -130,14 +112,108 @@ export class ArticleContentService {
         return articleContent;
     }
 
-    async update(id: number, updateArticleContentDto: UpdateArticleContentDto) {
+    async update(id: number, updateArticleContentDto: UpdateArticleContentDto): Promise<ArticleContent> {
+        const { contentType, updateMode, ...otherUpdates } = updateArticleContentDto;
+
         const articleContent = await this.findOne(id);
-        const updatedArticleContent = Object.assign(articleContent, updateArticleContentDto);
-        return this.articleContentRepository.save(updatedArticleContent);
+        if (!articleContent) {
+            throw new NotFoundException(`ArticleContent with id ${id} not found`);
+        }
+
+        // Mises à jour simples sur l'article
+        Object.assign(articleContent, otherUpdates);
+
+        const updatedArticleContent = await this.articleContentRepository.save(articleContent);
+
+        if (contentType) {
+            await this.dataSource.transaction(async (manager) => {
+                if ((updateMode || UpdateMode.ADD) === UpdateMode.REPLACE) {
+                    // Supprimer tous les anciens ContentTypes liés à l'article
+                    await manager.delete('ContentType', { articleContent: updatedArticleContent });
+
+                    // Créer les nouveaux ContentTypes
+                    const newContentTypes = contentType.map((contentTypeData) =>
+                        manager.create('ContentType', {
+                            ...contentTypeData,
+                            articleContent: updatedArticleContent, // Associer après la sauvegarde
+                        }),
+                    );
+
+                    // Sauvegarder les nouveaux ContentTypes
+                    await manager.save('ContentType', newContentTypes);
+                } else if ((updateMode || UpdateMode.ADD) === UpdateMode.ADD) {
+                    // Ajouter uniquement de nouveaux ContentTypes
+                    const newContentTypes = contentType.map((contentTypeData) =>
+                        manager.create('ContentType', {
+                            ...contentTypeData,
+                            articleContent: updatedArticleContent, // Associer après la sauvegarde
+                        }),
+                    );
+
+                    // Sauvegarder les nouveaux ContentTypes
+                    await manager.save('ContentType', newContentTypes);
+                }
+            });
+        }
+
+        // Recharger l'article avec toutes ses relations
+        const loadedArticleContent = await this.articleContentRepository.findOne({
+            where: { id: updatedArticleContent.id },
+            relations: ['reads', 'saved', 'article', 'contentType'],
+        });
+
+        return loadedArticleContent;
     }
 
     async remove(id: number) {
         const articleContent = await this.findOne(id);
+        if (!articleContent) {
+            throw new NotFoundException(`ArticleContent with id ${id} not found`);
+        }
         return this.articleContentRepository.remove(articleContent);
+    }
+
+    async addRead(articleContentId: number, addRead: readUser): Promise<ArticleContent> {
+        const articleContent = await this.findOne(articleContentId);
+        const user = await this.userRepository.findOne({ where: { id: addRead.userId } });
+
+        if (!articleContent) {
+            throw new NotFoundException(`Article Content with ID ${articleContentId} not found`);
+        }
+
+        if (!user) {
+            throw new NotFoundException(`User with ID ${addRead.userId} not found`);
+        }
+
+        const alreadyRead = articleContent.reads.some((u) => u.id === addRead.userId);
+        if (alreadyRead) {
+            articleContent.reads = articleContent.reads.filter((u) => u.id != addRead.userId);
+        } else {
+            articleContent.reads.push(user);
+        }
+
+        return this.articleContentRepository.save(articleContent);
+    }
+
+    async addSave(articleContentId: number, addSave: saveUser): Promise<ArticleContent> {
+        const articleContent = await this.findOne(articleContentId);
+        const user = await this.userRepository.findOne({ where: { id: addSave.userId } });
+
+        if (!articleContent) {
+            throw new NotFoundException(`Article Content with ID ${articleContentId} not found`);
+        }
+
+        if (!user) {
+            throw new NotFoundException(`User with ID ${addSave.userId} not found`);
+        }
+
+        const alreadySave = articleContent.saved.some((u) => u.id === addSave.userId);
+        if (alreadySave) {
+            articleContent.saved = articleContent.saved.filter((u) => u.id != addSave.userId);
+        } else {
+            articleContent.saved.push(user);
+        }
+
+        return this.articleContentRepository.save(articleContent);
     }
 }

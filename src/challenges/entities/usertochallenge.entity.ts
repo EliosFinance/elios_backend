@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Challenge } from './challenge.entity';
 
@@ -33,4 +33,7 @@ export class UserToChallenge {
         default: ChallengeStatus.DEFAULT,
     })
     status: ChallengeStatus;
+
+    @CreateDateColumn()
+    creation_date: Date;
 }

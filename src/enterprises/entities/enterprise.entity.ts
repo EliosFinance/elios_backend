@@ -7,9 +7,11 @@ export class Enterprise {
     id: number;
 
     @Column('varchar', { length: 64 })
+    // Obligatoire
     name: string;
 
     @Column('text')
+    // Obligatoire
     description: string;
 
     @CreateDateColumn()
@@ -20,4 +22,6 @@ export class Enterprise {
         (challenge) => challenge.enterprise,
     )
     challenge: Challenge[];
+
+    // Logo
 }

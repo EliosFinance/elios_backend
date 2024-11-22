@@ -1,4 +1,13 @@
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Enterprise } from '../../enterprises/entities/enterprise.entity';
 import { User } from '../../users/entities/user.entity';
 import { UserToChallenge } from './usertochallenge.entity';
@@ -18,12 +27,15 @@ export class Challenge {
     id: number;
 
     @Column('varchar', { length: 255 })
+    // Obligatoire
     title: string;
 
     @Column('text')
+    // Obligatoire
     description: string;
 
     @Column()
+    // Obligatoire
     image: string;
 
     @OneToMany(
@@ -36,6 +48,7 @@ export class Challenge {
         () => Enterprise,
         (enterprise) => enterprise.challenge,
     )
+    // Obligatoire
     enterprise: Enterprise;
 
     @Column({
@@ -43,5 +56,9 @@ export class Challenge {
         enum: CategoryChallenge,
         default: CategoryChallenge.BUDGET,
     })
+    // Obligatoire
     category: CategoryChallenge;
+
+    @CreateDateColumn()
+    creation_date: Date;
 }

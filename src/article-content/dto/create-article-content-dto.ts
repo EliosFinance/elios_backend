@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { CreateContentTypeDto } from '../../content-type/dto/create-content-type.dto';
 import { ArticleContentType } from '../entities/article-content.entity';
 
@@ -24,12 +24,13 @@ export class CreateArticleContentDto {
     @IsArray({ message: "The 'savedUserId' field must be an array" })
     savedUserId: number[];
 
-    @IsOptional()
+    @IsNotEmpty({ message: "The 'contentType' field is required" })
     @IsArray({ message: 'Le champ "contentType" doit être un tableau d’éléments.' })
     @ValidateNested({ each: true })
     @Type(() => CreateContentTypeDto)
     contentType: CreateContentTypeDto[];
 
     @IsOptional()
+    @IsInt({ message: "The 'articleId' field must be an integer" })
     articleId: number;
 }

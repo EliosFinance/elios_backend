@@ -1,4 +1,13 @@
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import { ArticleCategory } from '../../article-category/entities/article-category.entity';
 import { ArticleContent } from '../../article-content/entities/article-content.entity';
 import { CategoryChallenge } from '../../challenges/entities/challenge.entity';
@@ -10,27 +19,29 @@ export class Article {
     id: number;
 
     @Column()
+    // Obligatoire
     title: string;
 
     @Column('text')
+    // Obligatoire
     description: string;
 
     @Column('boolean', { default: false })
     isPremium: boolean;
 
-    @Column('int', { default: 0 })
-    views: number;
-
     @ManyToMany(
         () => User,
         (user) => user.articles,
+        { cascade: true },
     )
     @JoinTable()
     authors: User[];
+    // Obligatoire
 
     @ManyToMany(
         () => User,
         (user) => user.likedArticles,
+        { cascade: true },
     )
     @JoinTable({
         name: 'articles_likes',
@@ -42,6 +53,7 @@ export class Article {
     @ManyToMany(
         () => User,
         (user) => user.readArticles,
+        { cascade: true },
     )
     @JoinTable({
         name: 'articles_reads',
@@ -53,6 +65,9 @@ export class Article {
     @ManyToMany(
         () => User,
         (user) => user.savedArticles,
+        {
+            cascade: true,
+        },
     )
     @JoinTable({
         name: 'articles_saved',
@@ -66,22 +81,32 @@ export class Article {
         nullable: false,
         default: 0,
     })
+    // Obligatoire
     readingTime: number;
 
     @Column({
         default: 'lala',
     })
+    // Obligatoire
     thumbnail: string;
 
     @ManyToOne(
         () => ArticleCategory,
         (articleCategory) => articleCategory.articles,
     )
+    // Obligatoire
     category: ArticleCategory;
 
     @OneToMany(
         () => ArticleContent,
         (articleContent) => articleContent.article,
+        {
+            cascade: ['remove'],
+            onDelete: 'CASCADE',
+        },
     )
     articleContent: ArticleContent[];
+
+    @CreateDateColumn()
+    creation_date: Date;
 }

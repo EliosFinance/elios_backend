@@ -1,4 +1,13 @@
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinTable,
+    ManyToMany,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Article } from '../../articles/entities/article.entity';
 import { ContentType } from '../../content-type/entities/content-type.entity';
 import { User } from '../../users/entities/user.entity';
@@ -46,6 +55,10 @@ export class ArticleContent {
     @OneToMany(
         () => ContentType,
         (contentType) => contentType.articleContent,
+        {
+            cascade: ['remove'],
+            onDelete: 'CASCADE',
+        },
     )
     contentType: ContentType[];
 
@@ -59,6 +72,10 @@ export class ArticleContent {
     @ManyToOne(
         () => Article,
         (article) => article.articleContent,
+        { onDelete: 'CASCADE' },
     )
     article: Article;
+
+    @CreateDateColumn()
+    creation_date: Date;
 }
