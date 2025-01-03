@@ -9,12 +9,13 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     private readonly logger = new Logger(JwtRefreshTokenStrategy.name);
 
     constructor(private authService: AuthService) {
-        super({ usernameField: 'username' });
+        super({ usernameField: 'usernameOrEmail' });
         this.logger.warn('LocalStrategy initialized');
     }
 
-    async validate(username: string, password: string): Promise<any> {
-        const user = await this.authService.validateUser(username, password);
+    async validate(usernameOrEmail: string, password: string): Promise<any> {
+        console.log('usernameOrEmail', usernameOrEmail, password);
+        const user = await this.authService.validateUser(usernameOrEmail, password);
         if (!user) {
             throw new UnauthorizedException();
         }

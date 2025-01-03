@@ -7,6 +7,7 @@ import {
     ManyToMany,
     OneToMany,
     PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import { ArticleCategory } from '../../article-category/entities/article-category.entity';
@@ -17,6 +18,7 @@ import { UserToChallenge } from '../../challenges/entities/usertochallenge.entit
 import { Transaction } from '../../transactions/entities/transaction.entity';
 
 @Entity()
+@Unique(['username', 'email'])
 export class User {
     @PrimaryGeneratedColumn()
     id: number;
@@ -26,6 +28,9 @@ export class User {
 
     @Column()
     password: string;
+
+    @Column({ default: null })
+    email: string;
 
     @Column({ nullable: true })
     powens_token: string;

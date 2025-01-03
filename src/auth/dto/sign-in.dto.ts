@@ -1,9 +1,9 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class SignInDto {
     @IsNotEmpty({ message: "The 'username' field is required" })
     @IsString()
-    username: string;
+    usernameOrEmail: string;
 
     @IsNotEmpty({ message: "The 'password' field is required" })
     @IsString()

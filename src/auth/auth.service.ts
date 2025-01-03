@@ -1,5 +1,8 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
@@ -12,12 +15,14 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
     ) {}
 
     async signIn(signInDto: SignInDto) {
-        const { username, password } = signInDto;
+        const { usernameOrEmail, password } = signInDto;
 
-        const user = await this.usersService.findOneByUsername(username);
+        const user = await this.usersService.findOneByUsername(usernameOrEmail);
 
         if (!user) {
             throw new UnauthorizedException('Invalid username or password');
@@ -35,8 +40,6 @@ export class AuthService {
             expiresIn: '1d',
         });
 
-        console.log(user);
-
         await this.refreshTokenIdsStorage.insert(user.id, refreshToken);
 
         return {
@@ -48,7 +51,9 @@ export class AuthService {
     }
 
     async validateUser(username: string, password: string): Promise<any> {
-        const user = await this.usersService.findOneByUsername(username);
+        const user = await this.userRepository.findOne({
+            where: [{ username: username }, { email: username }],
+        });
         if (user && (await user.validatePassword(password))) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { password, ...result } = user;
