@@ -21,7 +21,8 @@
         "prepare": "husky install",
         "commit": "cz",
         "genDocu": "npx @compodoc/compodoc -p ./tsconfig.json -n 'Elios backend documentation'",
-        "serveDocu": "npx @compodoc/compodoc -s"
+        "serveDocu": "npx @compodoc/compodoc -s",
+        "seed": "ts-node ./src/seed/main"
     },
     "dependencies": {
         "@commitlint/cli": "^19.5.0",
@@ -41,6 +42,7 @@
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.1",
         "commitizen": "^4.3.0",
+        "dotenv": "^16.4.7",
         "elios_backend": "file:",
         "ioredis": "^5.4.1",
         "passport": "^0.7.0",
@@ -56,6 +58,7 @@
         "@commitlint/cz-commitlint": "^19.5.0",
         "@commitlint/is-ignored": "^19.5.0",
         "@compodoc/compodoc": "^1.1.25",
+        "@faker-js/faker": "^9.3.0",
         "@nestjs/cli": "^10.0.0",
         "@nestjs/schematics": "^10.0.0",
         "@nestjs/testing": "^10.0.0",
