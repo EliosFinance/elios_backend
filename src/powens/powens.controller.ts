@@ -1,10 +1,14 @@
 import { HttpService } from '@nestjs/axios';
 import { Controller, Get, Query, Redirect, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
 import { lastValueFrom } from 'rxjs';
+import { Repository } from 'typeorm';
 import { Public } from '../auth/decorator/public.decorator';
 import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
+import { Connector } from './entities/connector.entity';
 import { PowensService } from './powens.service';
 
 @Controller('powens')
@@ -15,13 +19,14 @@ export class PowensController {
         private readonly powensService: PowensService,
         private readonly usersService: UsersService,
         private readonly transactionsService: TransactionsService,
+        @InjectRepository(Connector)
+        private readonly connectorRepository: Repository<Connector>,
     ) {}
 
-    @Get()
-    getSmallToken(@Req() req: Request) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return `https://lperrenot-sandbox.biapi.pro/2.0/auth/webview/connect?client_id=70395459&redirect_uri=http://localhost:3333/powens/get?userId=${req.user.id}`;
+    @Get('/connectors')
+    async getConnectors() {
+        await this.powensService.syncConnector();
+        return this.powensService.getAllConnectors();
     }
 
     @Public()

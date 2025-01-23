@@ -22,7 +22,7 @@ export class AuthService {
     async signIn(signInDto: SignInDto) {
         const { usernameOrEmail, password } = signInDto;
 
-        const user = await this.usersService.findOneByUsername(usernameOrEmail);
+        const user = await this.usersService.findOneByUsernameOrEmail(usernameOrEmail);
 
         if (!user) {
             throw new UnauthorizedException('Invalid username or password');
@@ -51,9 +51,7 @@ export class AuthService {
     }
 
     async validateUser(username: string, password: string): Promise<any> {
-        const user = await this.userRepository.findOne({
-            where: [{ username: username }, { email: username }],
-        });
+        const user = await this.usersService.findOneByUsername(username);
         if (user && (await user.validatePassword(password))) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { password, ...result } = user;

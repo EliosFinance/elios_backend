@@ -23,13 +23,13 @@ export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ unique: true })
     username: string;
 
     @Column()
     password: string;
 
-    @Column({ default: null })
+    @Column({ unique: true, default: null })
     email: string;
 
     @Column({ nullable: true })

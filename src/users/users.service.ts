@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import * as bcrypt from 'bcrypt';
@@ -30,7 +30,23 @@ export class UsersService {
             user.email = email;
             user.powens_token = auth_token;
 
-            return this.userRepository.save(user);
+            return this.userRepository.save(user).catch((error) => {
+                const errorMessage = error.detail;
+                if (
+                    /(username)[\s\S]+(already exists)/.test(errorMessage) &&
+                    /(email)[\s\S]+(already exists)/.test(errorMessage)
+                ) {
+                    throw new BadRequestException('The username and email are already taken');
+                }
+                if (/(username)[\s\S]+(already exists)/.test(errorMessage)) {
+                    throw new BadRequestException('The username is already taken');
+                }
+                if (/(email)[\s\S]+(already exists)/.test(errorMessage)) {
+                    throw new BadRequestException('The email is already in use');
+                }
+
+                throw new Error(error.message) || 'An unknown error occurred.';
+            });
         } catch (error) {
             console.error('Error during Powens API call: ', error);
             throw new Error('Failed to initialize Powens auth token');
@@ -50,7 +66,13 @@ export class UsersService {
         });
     }
 
-    findOneByUsername(usernameOrEmail: string, email?: string): Promise<User> {
+    findOneByUsername(usernameOrEmail: string): Promise<User> {
+        return this.userRepository.findOne({
+            where: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
+        });
+    }
+
+    findOneByUsernameOrEmail(usernameOrEmail: string): Promise<User | null> {
         return this.userRepository.findOne({
             where: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
         });
