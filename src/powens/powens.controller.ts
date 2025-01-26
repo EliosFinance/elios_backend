@@ -1,10 +1,12 @@
 import { HttpService } from '@nestjs/axios';
-import { Body, Controller, Get, Post, Query, Redirect, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query, Redirect, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import { lastValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import { StateService } from '../../state.service';
 import { Public } from '../auth/decorator/public.decorator';
 import { TransactionsService } from '../transactions/transactions.service';
 import { UsersService } from '../users/users.service';
@@ -21,6 +23,7 @@ export class PowensController {
         private readonly transactionsService: TransactionsService,
         @InjectRepository(Connector)
         private readonly connectorRepository: Repository<Connector>,
+        private readonly stateService: StateService,
     ) {}
 
     @Get('/connectors')
@@ -64,40 +67,7 @@ export class PowensController {
             throw new Error('No powens token');
         }
 
-        let userTransaction = await this.transactionsService.getUserTransactions(user.id, 'ASC');
-
-        let apiUrl = 'https://lperrenot-sandbox.biapi.pro/2.0/users/me/transactions?limit=1000';
-
-        if (userTransaction.length > 0) {
-            const lastUpdate = userTransaction[userTransaction.length - 1].date;
-            apiUrl += `&last_update=${lastUpdate}`;
-        }
-
-        let response = await lastValueFrom(
-            this.httpService.get(apiUrl, {
-                headers: {
-                    Authorization: `Bearer ${user.powens_token}`,
-                },
-            }),
-        );
-
-        let transactions = response.data.transactions;
-        await this.transactionsService.saveTransactions(transactions, user.id);
-
-        while (response.data._links.next) {
-            response = await lastValueFrom(
-                this.httpService.get(response.data._links.next, {
-                    headers: {
-                        Authorization: `Bearer ${user.powens_token}`,
-                    },
-                }),
-            );
-            transactions = response.data.transactions;
-            await this.transactionsService.saveTransactions(transactions, user.id);
-        }
-
-        userTransaction = await this.transactionsService.getUserTransactions(user.id);
-        return userTransaction;
+        return this.transactionsService.syncTransactions(user.id, user.powens_token);
     }
 
     @Post('add/connection')
@@ -105,23 +75,13 @@ export class PowensController {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const { user } = req;
-
         if (!connectorUuids) {
             throw new Error('No connector uuids found.');
         }
-        // console.log('user', user);
-        // const response = await axios.post(`https://lperrenot-sandbox.biapi.pro/2.0/users/${user.powens_id}/connections`,
-        //   {
-        //       connector_uuid: '07d76adf-ae35-5b38-aca8-67aafba13169'
-        //   },
-        //   {
-        //     headers: {
-        //         Authorization: `Bearer ${user.powens_token}`,
-        //     }
-        // })
-        // console.log(response.data)
-        const redirectUri = encodeURIComponent('http://localhost:3333/powens/callback');
-        const url = `https://webview.powens.com/fr/connect?&client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro&connector_uuids=${connectorUuids}&code=${user.powens_token}`;
+        const state = uuidv4();
+        await this.stateService.saveState(state, user.id);
+        const redirectUri = `http://localhost:3333/powens/callback?state=${state}`;
+        const url = `https://webview.powens.com/fr/connect?state=refreshBanks?&client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro&connector_uuids=${connectorUuids}&code=${user.powens_token}`;
         return {
             url,
         };
@@ -129,11 +89,35 @@ export class PowensController {
 
     @Public()
     @Get('callback')
-    async connectionCallback(@Query() query: any) {
+    async connectionCallback(@Query() query: any, @Req() req: Request) {
+        if (!query.state) {
+            throw new Error('No state provided');
+        }
+
+        const userId = await this.stateService.getUserIdFromState(query.state);
+        if (!userId) {
+            throw new Error('No user id provided');
+        }
+
+        const user = await this.usersService.findOne(userId);
+
+        if (!user || !user.powens_token) {
+            throw new Error('No user id or powens token provided');
+        }
+
         console.log('Callback body', query);
+        if (!user.powens_token) {
+            throw new Error('No powens token');
+        }
+
+        if (!query.connection_id) {
+            throw new Error('No connector uuids found.');
+        }
+
+        const transactions = await this.transactionsService.syncTransactions(user.id, user.powens_token);
         return {
-            message: 'Callback body',
-            data: query,
+            message: 'Transactions synchronized successfully.',
+            data: transactions,
         };
     }
 
@@ -158,5 +142,26 @@ export class PowensController {
         );
 
         return response.data.connections;
+    }
+
+    @Delete('delete/connections')
+    async deleteConnection(@Req() req: Request, @Body('connectionId') connectionId: string) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const { user } = req;
+        if (!user.powens_token || !user.powens_id) {
+            throw new Error('No powens token');
+        }
+
+        const response = await axios.delete(
+            `https://lperrenot-sandbox.biapi.pro/2.0/users/me/connections/${connectionId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${user.powens_token}`,
+                },
+            },
+        );
+
+        return response.data;
     }
 }

@@ -1,3 +1,4 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Article } from '../articles/entities/article.entity';
@@ -12,6 +13,7 @@ import { TransactionsService } from './transactions.service';
         TypeOrmModule.forFeature([Transaction]),
         TypeOrmModule.forFeature([User]),
         TypeOrmModule.forFeature([Article]),
+        HttpModule,
     ],
     controllers: [TransactionsController],
     providers: [TransactionsService, UsersService],

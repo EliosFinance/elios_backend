@@ -6,6 +6,9 @@ export class Transaction {
     @PrimaryGeneratedColumn()
     id: number;
 
+    @Column({ unique: true, nullable: true })
+    powens_id: string;
+
     @Column()
     id_account: number;
 

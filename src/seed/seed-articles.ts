@@ -26,7 +26,7 @@ export const seedArticles = async () => {
     let categories: ArticleCategory[] = [],
         users: User[] = [];
     try {
-        const categoryResponse = await axiosClient.get(`/article-categories`);
+        const categoryResponse = await axiosClient.get(`/article-category`);
         categories = categoryResponse.data;
 
         const userResponse = await axiosClient.get(`/users`);
@@ -73,7 +73,7 @@ export const seedArticles = async () => {
                     articleId: response.data.id,
                 };
 
-                const contentResponse = await axiosClient.post(`/article-contents`, articleContentData);
+                const contentResponse = await axiosClient.post(`/article-content`, articleContentData);
                 console.log(`Article content created: ${contentResponse.data.title}`);
 
                 // Créer des types de contenu pour chaque contenu d'article
@@ -84,7 +84,7 @@ export const seedArticles = async () => {
                         articleContentId: contentResponse.data.id,
                     };
 
-                    await axiosClient.post('/content-types', contentTypeData);
+                    await axiosClient.post('/content-type', contentTypeData);
                     console.log(`Content type created: ${contentTypeData.type}`);
                 }
             }

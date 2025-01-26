@@ -21,7 +21,6 @@ export const seedEnterprises = async () => {
             name: faker.company.name(),
             description: faker.company.catchPhrase(),
         };
-
         try {
             const response = await axiosClient.post('/enterprises', enterpriseData);
             console.log(`Enterprise created: ${response.data.name}`);

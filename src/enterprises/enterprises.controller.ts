@@ -11,6 +11,7 @@ export class EnterprisesController {
 
     @Post()
     create(@Body() createEnterpriseDto: CreateEnterpriseDto) {
+        console.log('je rentre la');
         return this.enterprisesService.create(createEnterpriseDto);
     }
 
