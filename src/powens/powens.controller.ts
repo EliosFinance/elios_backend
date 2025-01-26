@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Controller, Get, Query, Redirect, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Redirect, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
@@ -98,6 +98,43 @@ export class PowensController {
 
         userTransaction = await this.transactionsService.getUserTransactions(user.id);
         return userTransaction;
+    }
+
+    @Post('add/connection')
+    async addConnection(@Req() req: Request, @Body('connector_uuids') connectorUuids: string) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const { user } = req;
+
+        if (!connectorUuids) {
+            throw new Error('No connector uuids found.');
+        }
+        // console.log('user', user);
+        // const response = await axios.post(`https://lperrenot-sandbox.biapi.pro/2.0/users/${user.powens_id}/connections`,
+        //   {
+        //       connector_uuid: '07d76adf-ae35-5b38-aca8-67aafba13169'
+        //   },
+        //   {
+        //     headers: {
+        //         Authorization: `Bearer ${user.powens_token}`,
+        //     }
+        // })
+        // console.log(response.data)
+        const redirectUri = encodeURIComponent('http://localhost:3333/powens/callback');
+        const url = `https://webview.powens.com/fr/connect?&client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro&connector_uuids=${connectorUuids}&code=${user.powens_token}`;
+        return {
+            url,
+        };
+    }
+
+    @Public()
+    @Get('callback')
+    async connectionCallback(@Query() query: any) {
+        console.log('Callback body', query);
+        return {
+            message: 'Callback body',
+            data: query,
+        };
     }
 
     @Get('connections')

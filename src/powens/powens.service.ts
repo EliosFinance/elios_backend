@@ -47,7 +47,12 @@ export class PowensService {
     }
 
     async getAllConnectors(): Promise<Connector[]> {
-        return this.connectorRepository.find();
+        const connectors = await this.connectorRepository.find();
+
+        return connectors.map((connector) => ({
+            ...connector,
+            logo: `https://lperrenot-sandbox.biapi.pro/2.0/logos/${connector.uuid}-thumbnail.webp`,
+        }));
     }
 
     private hasConnectorChanged(dbConnector: Connector, apiConnector: any): boolean {
@@ -56,11 +61,12 @@ export class PowensService {
             dbConnector.slug !== apiConnector.slug ||
             dbConnector.color !== apiConnector.color ||
             dbConnector.code !== apiConnector.code ||
-            dbConnector.capabilities.toString() !== apiConnector.capabilities.toString() ||
-            dbConnector.available_auth_mechanisms.toString() !== apiConnector.available_auth_mechanisms.toString() ||
-            dbConnector.account_types.toString() !== apiConnector.account_types.toString() ||
-            dbConnector.products.toString() !== apiConnector.products.toString() ||
-            dbConnector.documents_types.toString() !== apiConnector.documents_type.toString() ||
+            (dbConnector.capabilities || []).toString() !== (apiConnector.capabilities || []).toString() ||
+            (dbConnector.available_auth_mechanisms || []).toString() !==
+                (apiConnector.available_auth_mechanisms || []).toString() ||
+            (dbConnector.account_types || []).toString() !== (apiConnector.account_types || []).toString() ||
+            (dbConnector.products || []).toString() !== (apiConnector.products || []).toString() ||
+            (dbConnector.documents_types || []).toString() !== (apiConnector.documents_type || []).toString() ||
             dbConnector.restricted !== apiConnector.restricted ||
             dbConnector.beta !== apiConnector.beta ||
             dbConnector.hidden !== apiConnector.hidden

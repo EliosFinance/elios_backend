@@ -22,13 +22,13 @@ export class UsersService {
 
         try {
             const response = await axios.post('https://lperrenot-sandbox.biapi.pro/2.0/auth/init', payload);
-
-            const { auth_token } = response.data;
+            const { auth_token, id_user } = response.data;
             const user = new User();
             user.username = username;
             user.password = hashedPassword;
             user.email = email;
             user.powens_token = auth_token;
+            user.powens_id = id_user;
 
             return this.userRepository.save(user).catch((error) => {
                 const errorMessage = error.detail;

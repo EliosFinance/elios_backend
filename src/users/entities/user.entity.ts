@@ -35,6 +35,9 @@ export class User {
     @Column({ nullable: true })
     powens_token: string;
 
+    @Column({ nullable: true })
+    powens_id: number;
+
     @OneToMany(
         () => Transaction,
         (transaction) => transaction.user,
