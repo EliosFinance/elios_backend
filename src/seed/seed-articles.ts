@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { CreateArticleCategoryDto } from 'src/article-category/dto/create-article-category.dto';
 import { ArticleCategory } from 'src/article-category/entities/article-category.entity';
 import { CreateArticleContentDto } from 'src/article-content/dto/create-article-content-dto';
 import { ArticleContentType } from 'src/article-content/entities/article-content.entity';
@@ -7,6 +8,38 @@ import { CreateContentTypeDto } from 'src/content-type/dto/create-content-type.d
 import { ContentTypeCategory } from 'src/content-type/entities/content-type.entity';
 import { User } from 'src/users/entities/user.entity';
 import { axiosClient } from './AxiosClient';
+
+export enum ArticleCategoriesEnum {
+    EPARGNE = 'Epargne',
+    INVESTISSEMENT = 'Investissement',
+    VIDEOS = 'Vidéos',
+    ACTUALITES = 'Actualités',
+    IMMOBILIER = 'Immobilier',
+    CRYPTO = 'Crypto',
+    BOURSE = 'Bourse',
+    FISCAL = 'Fiscal',
+    RETRAITE = 'Retraite',
+    ASSURANCE = 'Assurance',
+    BANQUE = 'Banque',
+    CREDIT = 'Crédit',
+    BUDGET = 'Budget',
+    EMPLOI = 'Emploi',
+    ENTREPRENEURIAT = 'Entrepreneuriat',
+    LIVRES = 'Livres',
+    FORMATION = 'Formation',
+    WEBINAIRE = 'Webinaire',
+    EVENEMENT = 'Evénement',
+    INTERVIEW = 'Interview',
+    PODCAST = 'Podcast',
+    MINDSET = 'Mindset',
+    BIEN_ETRE = 'Bien-être',
+    DEVELOPPEMENT_PERSONNEL = 'Développement personnel',
+    COACHING = 'Coaching',
+    SPIRITUALITE = 'Spiritualité',
+    RELATION = 'Relation',
+    FAMILLE = 'Famille',
+    EDUCATION = 'Education',
+}
 
 export const seedArticles = async () => {
     const articles = await axiosClient.get(`/articles`);
@@ -23,22 +56,37 @@ export const seedArticles = async () => {
     console.log('Seeding articles...');
 
     // Récupérer les catégories et les utilisateurs existants
-    let categories: ArticleCategory[] = [],
-        users: User[] = [];
+    let users: User[] = [];
     try {
-        const categoryResponse = await axiosClient.get(`/article-category`);
-        categories = categoryResponse.data;
-
         const userResponse = await axiosClient.get(`/users`);
         users = userResponse.data;
     } catch (error) {
-        console.error('Error fetching categories or users:', error.response?.data || error.message);
+        console.error('Error fetching users:', error.response?.data || error.message);
         return;
     }
 
-    if (categories.length === 0 || users.length === 0) {
-        console.error('No categories or users found in the database. Please seed categories and users first.');
+    if (users.length === 0) {
+        console.error('No users found in the database. Please seed users first.');
         return;
+    }
+
+    const categories: ArticleCategory[] = [];
+    for (const category of Object.values(ArticleCategoriesEnum)) {
+        const categoryData: CreateArticleCategoryDto = {
+            title: category,
+            description: faker.lorem.paragraph(),
+            icon: faker.image.url(),
+            articlesId: [],
+        };
+
+        try {
+            const response = await axiosClient.post('/article-category', categoryData);
+            categories.push(response.data);
+            console.log(`Category created: ${response.data.title}`);
+        } catch (error) {
+            console.error('Error creating category:', error.response?.data || error.message);
+            return;
+        }
     }
 
     for (let i = 0; i < 10; i++) {
@@ -79,7 +127,7 @@ export const seedArticles = async () => {
                 // Créer des types de contenu pour chaque contenu d'article
                 for (let k = 0; k < 2; k++) {
                     const contentTypeData: CreateContentTypeDto = {
-                        type: faker.helpers.arrayElement(['text', 'list', 'image', 'video']) as ContentTypeCategory,
+                        type: faker.helpers.arrayElement(['text', 'list', 'image']) as ContentTypeCategory,
                         text: [faker.lorem.sentence()],
                         articleContentId: contentResponse.data.id,
                     };
