@@ -46,6 +46,17 @@ export class PowensService {
         }
     }
 
+    async getSingleConnector(connector_uuid: string): Promise<Connector | null> {
+        const connector = await this.connectorRepository.findOne({
+            where: { uuid: connector_uuid },
+        });
+
+        return {
+            ...connector,
+            logo: `https://lperrenot-sandbox.biapi.pro/2.0/logos/${connector.uuid}-thumbnail.webp`,
+        } as Connector;
+    }
+
     async getAllConnectors(): Promise<Connector[]> {
         const connectors = await this.connectorRepository.find();
 

@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Body, Controller, Delete, Get, Post, Query, Redirect, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Redirect, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
@@ -25,6 +25,11 @@ export class PowensController {
         private readonly connectorRepository: Repository<Connector>,
         private readonly stateService: StateService,
     ) {}
+
+    @Get('/connector')
+    async getSingleConnector(@Req() req: Request, @Query('uuid') connector_uuid: string) {
+        return this.powensService.getSingleConnector(connector_uuid);
+    }
 
     @Get('/connectors')
     async getConnectors() {
@@ -75,11 +80,13 @@ export class PowensController {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const { user } = req;
+
         if (!connectorUuids) {
             throw new Error('No connector uuids found.');
         }
         const state = uuidv4();
         await this.stateService.saveState(state, user.id);
+
         const redirectUri = `http://localhost:3333/powens/callback?state=${state}`;
         const url = `https://webview.powens.com/fr/connect?state=refreshBanks?&client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro&connector_uuids=${connectorUuids}&code=${user.powens_token}`;
         return {
@@ -90,11 +97,19 @@ export class PowensController {
     @Public()
     @Get('callback')
     async connectionCallback(@Query() query: any, @Req() req: Request) {
+        let finalState = query.state;
         if (!query.state) {
             throw new Error('No state provided');
         }
 
-        const userId = await this.stateService.getUserIdFromState(query.state);
+        if (Array.isArray(query.state)) {
+            // find the uuid-like string
+            finalState = query.state.find((state: string) =>
+                state.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/),
+            );
+        }
+
+        const userId = await this.stateService.getUserIdFromState(finalState);
         if (!userId) {
             throw new Error('No user id provided');
         }
@@ -105,7 +120,6 @@ export class PowensController {
             throw new Error('No user id or powens token provided');
         }
 
-        console.log('Callback body', query);
         if (!user.powens_token) {
             throw new Error('No powens token');
         }

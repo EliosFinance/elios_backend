@@ -26,7 +26,7 @@ import 'dotenv/config';
             entities: ['**/entity/*.entity.ts'],
             synchronize: true,
             autoLoadEntities: true,
-            logging: true,
+            logging: false,
         }),
         PowensModule,
         AuthModule,
