@@ -13,6 +13,7 @@ import { PowensModule } from './powens/powens.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 @Module({
     imports: [
@@ -38,6 +39,7 @@ import 'dotenv/config';
         ArticleCategoryModule,
         ArticleContentModule,
         ContentTypeModule,
+        PrometheusModule.register({}),
     ],
     controllers: [AppController],
     providers: [AppService],
