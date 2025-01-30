@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ArticleCategoryModule } from './article-category/article-category.module';
 import { ArticleContentModule } from './article-content/article-content.module';
 import { ArticlesModule } from './articles/articles.module';
@@ -13,14 +11,35 @@ import { PowensModule } from './powens/powens.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { LoggingInterceptor } from './logging.interceptor';
 
+console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
+console.warn('POSTGRES_PORT', process.env.POSTGRES_PORT);
+console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
+console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
+console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
+
+// log the connexion with the database
+console.warn('DB_STATUS', {
+    type: 'postgres',
+    host: String(process.env.POSTGRES_HOST),
+    port: parseInt(process.env.POSTGRES_PORT, 10),
+    username: String(process.env.POSTGRES_USER),
+    password: String(process.env.POSTGRES_PASSWORD),
+    database: String(process.env.POSTGRES_DB),
+    entities: ['**/entity/*.entity.ts'],
+    synchronize: true,
+    autoLoadEntities: true,
+    logging: false,
+});
 @Module({
     imports: [
         TypeOrmModule.forRoot({
             type: 'postgres',
-            host: 'localhost',
-            port: 5444,
+            host: String(process.env.POSTGRES_HOST),
+            port: parseInt(process.env.POSTGRES_PORT, 10),
             username: String(process.env.POSTGRES_USER),
             password: String(process.env.POSTGRES_PASSWORD),
             database: String(process.env.POSTGRES_DB),
@@ -39,9 +58,13 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
         ArticleCategoryModule,
         ArticleContentModule,
         ContentTypeModule,
-        PrometheusModule.register({}),
+        PrometheusModule.register(),
     ],
-    controllers: [AppController],
-    providers: [AppService],
+    providers: [
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: LoggingInterceptor,
+        },
+    ],
 })
 export class AppModule {}

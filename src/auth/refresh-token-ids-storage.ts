@@ -8,7 +8,14 @@ export class InvalidatedRefreshTokenError extends Error {}
 export class RefreshTokenIdsStorage implements OnApplicationBootstrap, OnApplicationShutdown {
     private redisClient: Redis;
     onApplicationBootstrap(): any {
-        this.redisClient = new Redis(6379, process.env.REDIS_HOST || '127.0.0.1');
+        if (!process.env.REDIS_PORT || isNaN(parseInt(process.env.REDIS_PORT))) {
+            throw new Error('REDIS_PORT is not set');
+        }
+        if (!process.env.REDIS_HOST || !String(process.env.REDIS_HOST)) {
+            throw new Error('REDIS_HOST is not set');
+        }
+
+        this.redisClient = new Redis(parseInt(process.env.REDIS_PORT), process.env.REDIS_HOST);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

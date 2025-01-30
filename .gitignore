@@ -2,6 +2,8 @@
 /dist
 /node_modules
 /build
+/k8s/elios-metrics/charts/*
+/k8s/elios-metrics/Chart.lock
 
 # Logs
 logs

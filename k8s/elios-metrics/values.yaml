@@ -1,0 +1,23 @@
+prometheus:
+  alertmanager:
+    enabled: false
+
+  pushgateway:
+    enabled: false
+
+  nodeExporter:
+    enabled: false
+
+grafana:
+  service:
+    type: NodePort
+
+postgresql:
+  enabled: true
+  service:
+    port: 5432
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
