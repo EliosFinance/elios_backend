@@ -13,6 +13,7 @@ import { UsersModule } from './users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { AppService } from './app.service';
 import { LoggingInterceptor } from './logging.interceptor';
 
 console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
@@ -61,6 +62,7 @@ console.warn('DB_STATUS', {
         PrometheusModule.register(),
     ],
     providers: [
+        AppService,
         {
             provide: APP_INTERCEPTOR,
             useClass: LoggingInterceptor,
