@@ -1,6 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
@@ -32,6 +33,31 @@ export class AuthService {
 
         if (!passwordIsValid) {
             throw new UnauthorizedException('Invalid username or password');
+        }
+
+        if (!user.powens_token) {
+            const payloadForPowens = {
+                client_id: '70395459',
+                client_secret: 'j7IX1ETJ4zyRUt8XucEaSSsuEz/oYhCK',
+            };
+
+            try {
+                const response = await axios.post(
+                    'https://lperrenot-sandbox.biapi.pro/2.0/auth/init',
+                    payloadForPowens,
+                );
+                const { auth_token, id_user } = response.data;
+                console.log(auth_token, id_user);
+                user.powens_token = auth_token;
+                user.powens_id = id_user;
+                await this.usersService.updateUser(user.id, {
+                    powens_token: auth_token,
+                    powens_id: id_user,
+                });
+            } catch (error) {
+                console.error('Error during Powens API call: ', error);
+                throw new Error('Failed to initialize Powens auth token');
+            }
         }
 
         const payload = { sub: user.id, username: user.username };

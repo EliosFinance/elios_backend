@@ -76,19 +76,49 @@ export class PowensController {
     }
 
     @Post('add/connection')
-    async addConnection(@Req() req: Request, @Body('connector_uuids') connectorUuids: string) {
+    async addConnection(
+        @Req() req: Request,
+        @Body('connector_uuids') connectorUuids: string,
+        @Body('connection_id') connection_id?: string,
+    ) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const { user } = req;
 
-        if (!connectorUuids) {
+        if (!connectorUuids && !connection_id) {
             throw new Error('No connector uuids found.');
         }
         const state = uuidv4();
         await this.stateService.saveState(state, user.id);
 
         const redirectUri = `http://localhost:3333/powens/callback?state=${state}`;
-        const url = `https://webview.powens.com/fr/connect?state=refreshBanks?&client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro&connector_uuids=${connectorUuids}&code=${user.powens_token}`;
+
+        const connection_id_parameter = connection_id ? `&connection_id=${connection_id}` : '';
+        const connector_uuids_parameter = connectorUuids ? `&connector_uuids=${connectorUuids}` : '';
+
+        const url = `https://webview.powens.com/fr/connect?state=refreshBanks?&client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro${connector_uuids_parameter}${connection_id_parameter}&code=${user.powens_token}`;
+        return {
+            url,
+        };
+    }
+
+    @Post('refresh/connection')
+    async refreshConnection(@Req() req: Request, @Body('connection_id') connection_id?: string) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const { user } = req;
+
+        if (!connection_id) {
+            throw new Error('No connector uuids found.');
+        }
+        const state = uuidv4();
+        await this.stateService.saveState(state, user.id);
+
+        const redirectUri = `http://localhost:3333/powens/callback?state=${state}`;
+
+        const connection_id_parameter = connection_id ? `&connection_id=${connection_id}` : '';
+
+        const url = `https://webview.powens.com/fr/reconnect?client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro${connection_id_parameter}&code=${user.powens_token}`;
         return {
             url,
         };
@@ -96,6 +126,7 @@ export class PowensController {
 
     @Public()
     @Get('callback')
+    @Redirect('http://localhost:5173/settings/bank-accounts', 302)
     async connectionCallback(@Query() query: any, @Req() req: Request) {
         let finalState = query.state;
         if (!query.state) {
@@ -128,11 +159,9 @@ export class PowensController {
             throw new Error('No connector uuids found.');
         }
 
-        const transactions = await this.transactionsService.syncTransactions(user.id, user.powens_token);
-        return {
-            message: 'Transactions synchronized successfully.',
-            data: transactions,
-        };
+        await this.transactionsService.syncTransactions(user.id, user.powens_token);
+
+        return;
     }
 
     @Get('connections')
@@ -163,7 +192,7 @@ export class PowensController {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const { user } = req;
-        if (!user.powens_token || !user.powens_id) {
+        if (!user.powens_token) {
             throw new Error('No powens token');
         }
 
