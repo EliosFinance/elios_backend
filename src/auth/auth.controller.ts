@@ -32,6 +32,12 @@ export class AuthController {
     }
 
     @Public()
+    @Post('google')
+    async googleLogin(@Body('token') token: string) {
+        return this.authService.googleLogin(token);
+    }
+
+    @Public()
     @UseGuards(JwtRefreshTokenGuard)
     @Post('refresh-token')
     async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
