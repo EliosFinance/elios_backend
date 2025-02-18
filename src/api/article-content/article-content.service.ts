@@ -97,11 +97,18 @@ export class ArticleContentService {
         return loadedArticleContent;
     }
 
-    async findAll(type?: string) {
+    async findAll(_type?: string): Promise<ArticleContent[]> {
         return this.articleContentRepository.find({ relations: ['reads', 'saved', 'article', 'contentType'] });
     }
 
-    async findOne(id: number) {
+    async userSaved(userId: number): Promise<ArticleContent[]> {
+        return this.articleContentRepository.find({
+            where: { saved: { id: userId } },
+            relations: ['authors', 'likes', 'reads', 'saved', 'articleContent'],
+        });
+    }
+
+    async findOne(id: number): Promise<ArticleContent> {
         const articleContent = await this.articleContentRepository.findOne({
             where: { id: id },
             relations: { reads: true, saved: true, article: true, contentType: true },
@@ -209,7 +216,7 @@ export class ArticleContentService {
 
         const alreadySave = articleContent.saved.some((u) => u.id === addSave.userId);
         if (alreadySave) {
-            articleContent.saved = articleContent.saved.filter((u) => u.id != addSave.userId);
+            articleContent.saved = articleContent.saved.filter((u) => u.id !== addSave.userId);
         } else {
             articleContent.saved.push(user);
         }

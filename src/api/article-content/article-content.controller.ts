@@ -1,4 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import * as jwt from 'jsonwebtoken';
+import { getUserIdFromToken } from '../../helpers/extractJwt';
 import { ArticleContentService } from './article-content.service';
 import { CreateArticleContentDto } from './dto/create-article-content-dto';
 import { readUser, saveUser } from './dto/relation-article-content.dto';
@@ -18,6 +20,12 @@ export class ArticleContentController {
         return this.articleContentService.findAll(type);
     }
 
+    @Get('/userSaved')
+    async userSaved(@Headers('authorization') authorization: string) {
+        const userId = getUserIdFromToken(authorization);
+        return this.articleContentService.userSaved(userId);
+    }
+
     @Get(':id')
     async findOne(@Param('id') id: number) {
         return this.articleContentService.findOne(+id);
@@ -34,12 +42,24 @@ export class ArticleContentController {
     }
 
     @Put(':id/read')
-    addRead(@Param('id') id: number, @Body() addRead: readUser) {
-        return this.articleContentService.addRead(+id, addRead);
+    addRead(@Param('id') id: number, @Headers('authorization') authorization: string) {
+        const payload = getUserIdFromToken(authorization);
+
+        const readUser: readUser = {
+            userId: Number(payload),
+        };
+
+        return this.articleContentService.addRead(+id, readUser);
     }
 
     @Put(':id/save')
-    addSave(@Param('id') id: number, @Body() addSave: saveUser) {
-        return this.articleContentService.addSave(+id, addSave);
+    addSave(@Param('id') id: number, @Headers('authorization') authorization: string) {
+        const payload = getUserIdFromToken(authorization);
+
+        const saveUser: saveUser = {
+            userId: Number(payload),
+        };
+
+        return this.articleContentService.addSave(+id, saveUser);
     }
 }

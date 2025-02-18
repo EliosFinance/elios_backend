@@ -99,6 +99,40 @@ export class ArticlesService {
         });
     }
 
+    async findTrending(): Promise<Article[]> {
+        const trendingArticles = await this.articleRepository
+            .createQueryBuilder('article')
+            .leftJoin('article.reads', 'reads')
+            .select(['article.id']) // Sélectionne uniquement l'ID
+            .addSelect('COUNT(reads.id)', 'read_count') // Utiliser un alias sûr
+            .groupBy('article.id')
+            .orderBy('read_count', 'DESC')
+            .limit(10)
+            .getRawMany();
+
+        const articleIds = trendingArticles.map((a) => a.article_id);
+        if (articleIds.length === 0) return [];
+
+        return this.articleRepository.find({
+            where: { id: In(articleIds) },
+            relations: ['authors', 'likes', 'reads', 'saved', 'articleContent'],
+        });
+    }
+
+    async userReads(userId: number): Promise<Article[]> {
+        return this.articleRepository.find({
+            where: { reads: { id: userId } },
+            relations: ['authors', 'likes', 'reads', 'saved', 'articleContent'],
+        });
+    }
+
+    async userLikes(userId: number): Promise<Article[]> {
+        return this.articleRepository.find({
+            where: { likes: { id: userId } },
+            relations: ['authors', 'likes', 'reads', 'saved', 'articleContent'],
+        });
+    }
+
     async findAll(): Promise<Article[]> {
         return this.articleRepository.find({ relations: ['authors', 'likes', 'reads', 'saved', 'articleContent'] });
     }
@@ -114,6 +148,8 @@ export class ArticlesService {
                 'saved',
                 'articleContent',
                 'articleContent.contentType',
+                'articleContent.reads',
+                'articleContent.saved',
             ],
         });
         if (!article) {
@@ -210,13 +246,17 @@ export class ArticlesService {
         const article = await this.findOne(articleId);
         const user = await this.userRepository.findOne({ where: { id: addLikeDto.userId } });
 
+        if (!article) {
+            throw new NotFoundException(`Article with ID ${articleId} not found`);
+        }
+
         if (!user) {
             throw new NotFoundException(`User with ID ${addLikeDto.userId} not found`);
         }
 
-        const alreadyLiked = article.likes.some((u) => u.id === user.id);
+        const alreadyLiked = article.likes.some((u) => u.id === addLikeDto.userId);
         if (alreadyLiked) {
-            article.likes = article.likes.filter((u) => u.id === user.id);
+            article.likes = article.likes.filter((u) => u.id !== addLikeDto.userId);
         } else {
             article.likes.push(user);
         }
@@ -224,7 +264,7 @@ export class ArticlesService {
         return this.articleRepository.save(article);
     }
 
-    async addRead(articleId: number, addRead: readUserArticle): Promise<void> {
+    async addRead(articleId: number, addRead: readUserArticle): Promise<Article | void> {
         const article = await this.articleRepository.findOne({
             where: { id: articleId },
             relations: ['articleContent', 'reads'],
@@ -254,7 +294,7 @@ export class ArticlesService {
         if (allContentRead) {
             if (!article.reads.some((reader) => reader.id === addRead.userId)) {
                 article.reads.push(user);
-                await this.articleRepository.save(article);
+                return await this.articleRepository.save(article);
             }
         }
     }

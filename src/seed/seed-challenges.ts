@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
-import { CreateChallengeDto } from 'src/challenges/dto/create-challenge-dto';
-import { CategoryChallenge } from 'src/challenges/entities/challenge.entity';
-import { Enterprise } from 'src/enterprises/entities/enterprise.entity';
+import { CreateChallengeDto } from '../api/challenges/dto/create-challenge-dto';
+import { CategoryChallenge } from '../api/challenges/entities/challenge.entity';
+import { Enterprise } from '../api/enterprises/entities/enterprise.entity';
 import { axiosClient } from './AxiosClient';
 
 export const seedChallenges = async () => {

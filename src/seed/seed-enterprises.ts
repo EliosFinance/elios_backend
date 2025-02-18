@@ -1,6 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { CreateEnterpriseDto } from 'src/enterprises/dto/create-enterprise.dto';
-import { Enterprise } from '../enterprises/entities/enterprise.entity';
+import { CreateEnterpriseDto } from '../api/enterprises/dto/create-enterprise.dto';
 import { axiosClient } from './AxiosClient';
 
 export const seedEnterprises = async () => {

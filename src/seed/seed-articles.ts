@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
-import { CreateArticleCategoryDto } from 'src/article-category/dto/create-article-category.dto';
-import { ArticleCategory } from 'src/article-category/entities/article-category.entity';
-import { CreateArticleContentDto } from 'src/article-content/dto/create-article-content-dto';
-import { ArticleContentType } from 'src/article-content/entities/article-content.entity';
-import { CreateArticleDto } from 'src/articles/dto/create-article.dto';
-import { CreateContentTypeDto } from 'src/content-type/dto/create-content-type.dto';
-import { ContentTypeCategory } from 'src/content-type/entities/content-type.entity';
-import { User } from 'src/users/entities/user.entity';
+import { CreateArticleCategoryDto } from '../api/article-category/dto/create-article-category.dto';
+import { ArticleCategory } from '../api/article-category/entities/article-category.entity';
+import { CreateArticleContentDto } from '../api/article-content/dto/create-article-content-dto';
+import { ArticleContentType } from '../api/article-content/entities/article-content.entity';
+import { CreateArticleDto } from '../api/articles/dto/create-article.dto';
+import { CreateContentTypeDto } from '../api/content-type/dto/create-content-type.dto';
+import { ContentTypeCategory } from '../api/content-type/entities/content-type.entity';
+import { User } from '../api/users/entities/user.entity';
 import { axiosClient } from './AxiosClient';
 
 export enum ArticleCategoriesEnum {
@@ -105,16 +105,11 @@ export const seedArticles = async () => {
             console.log(`Article created: ${response.data.title}`);
 
             // Créer des contenus pour l'article
-            for (let j = 0; j < 3; j++) {
+            for (let j = 0; j < 7; j++) {
                 const articleContentData: CreateArticleContentDto = {
                     title: faker.lorem.words(2),
                     image: faker.image.url(),
-                    type: faker.helpers.arrayElement([
-                        'preview',
-                        'small_preview',
-                        'full',
-                        'full_rounded_image',
-                    ]) as ArticleContentType,
+                    type: faker.helpers.arrayElement(['full', 'full_rounded_image']) as ArticleContentType,
                     readsUserId: [],
                     savedUserId: [],
                     contentType: [],
