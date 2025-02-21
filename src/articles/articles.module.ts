@@ -13,6 +13,9 @@ import { Article } from './entities/article.entity';
 @Module({
     imports: [TypeOrmModule.forFeature([Article, User, ArticleCategory, ArticleContent, ContentType])],
     controllers: [ArticlesController],
-    providers: [ArticlesService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+    providers: [
+        ArticlesService,
+        //{ provide: APP_GUARD, useClass: JwtAuthGuard }
+    ],
 })
 export class ArticlesModule {}

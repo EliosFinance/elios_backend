@@ -3,10 +3,13 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
     JoinTable,
     ManyToMany,
     OneToMany,
+    OneToOne,
     PrimaryGeneratedColumn,
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import { ArticleCategory } from '../../article-category/entities/article-category.entity';
@@ -15,20 +18,28 @@ import { Article } from '../../articles/entities/article.entity';
 import { Challenge } from '../../challenges/entities/challenge.entity';
 import { UserToChallenge } from '../../challenges/entities/usertochallenge.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
+import { UserNotifications } from './user-notifications.entity';
 
 @Entity()
+@Unique(['username', 'email'])
 export class User {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ unique: true })
     username: string;
 
     @Column()
     password: string;
 
+    @Column({ unique: true, default: null })
+    email: string;
+
     @Column({ nullable: true })
     powens_token: string;
+
+    @Column({ nullable: true })
+    powens_id: number;
 
     @OneToMany(
         () => Transaction,
@@ -94,6 +105,14 @@ export class User {
         (articleContent) => articleContent.saved,
     )
     savedArticlesContent: Article[];
+
+    @OneToOne(
+        () => UserNotifications,
+        (notifications) => notifications.user,
+        { cascade: true },
+    )
+    @JoinColumn({ name: 'userId' })
+    notifications: UserNotifications;
 
     @CreateDateColumn()
     creation_date: Date;
