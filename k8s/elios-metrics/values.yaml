@@ -1,0 +1,41 @@
+prometheus:
+  alertmanager:
+    enabled: false
+
+  pushgateway:
+    enabled: false
+
+  nodeExporter:
+    enabled: false
+
+  server:
+    additionalScrapeConfigs: |
+      - job_name: 'elios-metrics'
+        scrape_interval: 15s
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['elios-metrics:3333']
+        authorization:
+          type: Bearer
+          credentials: '${JWT_TOKEN}'  # Utilise la variable d'environnement
+    extraEnv:
+      - name: JWT_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: prometheus-jwt-secret
+            key: jwt_token
+
+
+grafana:
+  service:
+    type: NodePort
+
+postgresql:
+  enabled: true
+  service:
+    port: 5432
+
+redis:
+  enabled: true
+  auth:
+    enabled: false

@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elios-metrics
+  labels:
+    app: elios-metrics
+    app.kubernetes.io/managed-by: "Helm"
+  annotations:
+    meta.helm.sh/release-name: "elios-metrics"
+    meta.helm.sh/release-namespace: "default"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elios-metrics
+  template:
+    metadata:
+      labels:
+        app: elios-metrics
+        app.kubernetes.io/managed-by: "Helm"
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: /metrics
+        prometheus.io/port: '3333'
+        meta.helm.sh/release-name: "elios-metrics"
+        meta.helm.sh/release-namespace: "default"
+    spec:
+      containers:
+        - name: elios-metrics
+          image: florianplvd1/eliosmetrics:latest
+          ports:
+            - containerPort: 3333
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_DB
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PORT
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: REDIS_PORT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elios-metrics
+  labels:
+    app: elios-metrics
+    app.kubernetes.io/managed-by: "Helm"
+  annotations:
+    meta.helm.sh/release-name: "elios-metrics"
+    meta.helm.sh/release-namespace: "default"
+spec:
+  selector:
+    app: elios-metrics
+  ports:
+    - protocol: TCP
+      port: 3333
+      targetPort: 3333
+  type: NodePort

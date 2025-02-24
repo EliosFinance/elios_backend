@@ -1,32 +1,53 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ArticleCategoryModule } from './article-category/article-category.module';
-import { ArticleContentModule } from './article-content/article-content.module';
-import { ArticlesModule } from './articles/articles.module';
-import { AuthModule } from './auth/auth.module';
-import { ChallengesModule } from './challenges/challenges.module';
-import { ContentTypeModule } from './content-type/content-type.module';
-import { EnterprisesModule } from './enterprises/enterprises.module';
-import { PowensModule } from './powens/powens.module';
-import { TransactionsModule } from './transactions/transactions.module';
-import { UsersModule } from './users/users.module';
+import { ArticleCategoryModule } from './api/article-category/article-category.module';
+import { ArticleContentModule } from './api/article-content/article-content.module';
+import { ArticlesModule } from './api/articles/articles.module';
+import { AuthModule } from './api/auth/auth.module';
+import { ChallengesModule } from './api/challenges/challenges.module';
+import { ContentTypeModule } from './api/content-type/content-type.module';
+import { EnterprisesModule } from './api/enterprises/enterprises.module';
+import { PowensModule } from './api/powens/powens.module';
+import { TransactionsModule } from './api/transactions/transactions.module';
+import { UsersModule } from './api/users/users.module';
 import 'dotenv/config';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { AppService } from './app.service';
+import { LoggingInterceptor } from './logging.interceptor';
 
+console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
+console.warn('POSTGRES_PORT', process.env.POSTGRES_PORT);
+console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
+console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
+console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
+
+// // log the connexion with the database
+// console.warn('DB_STATUS', {
+//     type: 'postgres',
+//     host: String(process.env.POSTGRES_HOST),
+//     port: parseInt(process.env.POSTGRES_PORT, 10),
+//     username: String(process.env.POSTGRES_USER),
+//     password: String(process.env.POSTGRES_PASSWORD),
+//     database: String(process.env.POSTGRES_DB),
+//     entities: ['**/entity/*.entity.ts'],
+//     synchronize: true,
+//     autoLoadEntities: true,
+//     logging: false,
+// });
 @Module({
     imports: [
         TypeOrmModule.forRoot({
             type: 'postgres',
-            host: 'localhost',
-            port: 5444,
+            host: String(process.env.POSTGRES_HOST),
+            port: parseInt(process.env.POSTGRES_PORT, 10),
             username: String(process.env.POSTGRES_USER),
             password: String(process.env.POSTGRES_PASSWORD),
             database: String(process.env.POSTGRES_DB),
             entities: ['**/entity/*.entity.ts'],
             synchronize: true,
             autoLoadEntities: true,
-            logging: true,
+            logging: false,
         }),
         PowensModule,
         AuthModule,
@@ -38,8 +59,14 @@ import 'dotenv/config';
         ArticleCategoryModule,
         ArticleContentModule,
         ContentTypeModule,
+        PrometheusModule.register(),
     ],
-    controllers: [AppController],
-    providers: [AppService],
+    providers: [
+        AppService,
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: LoggingInterceptor,
+        },
+    ],
 })
 export class AppModule {}
