@@ -43,11 +43,13 @@ export class UsersService {
             relations: ['transactions', 'friends', 'notifications'],
         });*/
 
-        const user = await this.userRepository.findOne({
-            where: { id },
-            relations: ['notifications'],
-        });
-        console.log('User sans eager :', user);
+        const user = await this.userRepository
+            .createQueryBuilder('user')
+            .leftJoinAndSelect('user.notifications', 'notifications') // 🔥 Jointure forcée
+            .where('user.id = :id', { id })
+            .getOne();
+
+        console.log('User avec QueryBuilder:', user);
 
         if (!user) {
             throw new NotFoundException('User not found');

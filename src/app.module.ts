@@ -13,21 +13,11 @@ import { PowensModule } from './powens/powens.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
+import dataSource from '../data-source';
 
 @Module({
     imports: [
-        TypeOrmModule.forRoot({
-            type: 'postgres',
-            host: 'localhost',
-            port: 5444,
-            username: String(process.env.POSTGRES_USER),
-            password: String(process.env.POSTGRES_PASSWORD),
-            database: String(process.env.POSTGRES_DB),
-            entities: ['**/entity/*.entity.ts'],
-            synchronize: true,
-            autoLoadEntities: true,
-            logging: true,
-        }),
+        TypeOrmModule.forRoot(dataSource.options),
         PowensModule,
         AuthModule,
         UsersModule,
