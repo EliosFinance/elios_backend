@@ -109,9 +109,11 @@ export class User {
     @OneToOne(
         () => UserNotifications,
         (notifications) => notifications.user,
-        { cascade: true },
+        {
+            cascade: true,
+        },
     )
-    @JoinColumn({ name: 'userId' })
+    //@JoinColumn()
     notifications: UserNotifications;
 
     @CreateDateColumn()

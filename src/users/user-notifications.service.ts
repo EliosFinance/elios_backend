@@ -13,10 +13,9 @@ export class UserNotificationsService {
         private readonly userRepository: Repository<User>,
     ) {}
 
-    async findOne(userId: number): Promise<UserNotifications> {
+    async findOne(user_id: number): Promise<UserNotifications> {
         const notifications = await this.userNotificationsRepository.findOne({
-            where: { user: { id: userId } },
-            relations: ['user'],
+            where: { user: { id: user_id } },
         });
 
         if (!notifications) {

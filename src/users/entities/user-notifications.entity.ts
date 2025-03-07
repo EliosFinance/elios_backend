@@ -2,7 +2,7 @@ import { Exclude } from 'class-transformer';
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity()
+@Entity('user_notifications')
 export class UserNotifications {
     @PrimaryGeneratedColumn()
     id: number;

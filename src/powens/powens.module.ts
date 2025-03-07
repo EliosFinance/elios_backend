@@ -14,11 +14,6 @@ import { PowensService } from './powens.service';
 @Module({
     imports: [HttpModule, TypeOrmModule.forFeature([User]), UsersModule, TypeOrmModule.forFeature([Transaction])],
     controllers: [PowensController],
-    providers: [
-        PowensService,
-        UsersService,
-        TransactionsService,
-        //{ provide: APP_GUARD, useClass: JwtAuthGuard }
-    ],
+    providers: [PowensService, UsersService, TransactionsService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class PowensModule {}

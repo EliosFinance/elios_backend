@@ -38,7 +38,7 @@ export class AuthController {
         return this.authService.refreshAccessToken(refreshTokenDto.refresh_token);
     }
 
-    //@UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Post('invalidate-token')
     async invalidateToken(@Headers('authorization') authorization: string) {
         const token = authorization.split(' ')[1];

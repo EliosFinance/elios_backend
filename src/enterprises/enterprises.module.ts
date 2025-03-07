@@ -10,9 +10,6 @@ import { Enterprise } from './entities/enterprise.entity';
 @Module({
     imports: [TypeOrmModule.forFeature([Enterprise, Challenge])],
     controllers: [EnterprisesController],
-    providers: [
-        EnterprisesService,
-        //{ provide: APP_GUARD, useClass: JwtAuthGuard }
-    ],
+    providers: [EnterprisesService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class EnterprisesModule {}

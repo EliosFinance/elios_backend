@@ -10,7 +10,7 @@ import { UsersService } from './users.service';
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}
 
-    //@UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Get()
     findAll() {
         return this.usersService.findAll();
@@ -31,13 +31,13 @@ export class UsersController {
         return this.usersService.remove(+id);
     }
 
-    //@UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Patch(':id/notifications')
     updateNotifications(@Param('id') id: string, @Body() updateUserNotificationsDto: UpdateUserNotificationsDto) {
         return this.usersService.updateUserNotifications(+id, updateUserNotificationsDto);
     }
 
-    //@UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard)
     @Post(':id/notifications/trigger')
     triggerNotification(@Param('id') id: string, @Body('type') type: string) {
         return this.usersService.triggerNotification(+id, type);

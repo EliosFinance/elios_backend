@@ -38,18 +38,10 @@ export class UsersService {
     }
 
     async findOne(id: number): Promise<User> {
-        /*const user = await this.userRepository.findOne({
+        const user = await this.userRepository.findOne({
             where: { id },
             relations: ['transactions', 'friends', 'notifications'],
-        });*/
-
-        const user = await this.userRepository
-            .createQueryBuilder('user')
-            .leftJoinAndSelect('user.notifications', 'notifications') // 🔥 Jointure forcée
-            .where('user.id = :id', { id })
-            .getOne();
-
-        console.log('User avec QueryBuilder:', user);
+        });
 
         if (!user) {
             throw new NotFoundException('User not found');
