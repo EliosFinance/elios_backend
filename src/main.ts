@@ -6,12 +6,24 @@ import { AppModule } from './app.module';
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { cors: true });
 
-    const config = new DocumentBuilder().setTitle('API Documentation of Elios').setVersion('1.0').build();
+    const config = new DocumentBuilder()
+        .setTitle('API Documentation of Elios')
+        .setVersion('1.0')
+        .addBearerAuth(
+            {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'JWT',
+            },
+            'access-token',
+        )
+        .build();
 
     const options: SwaggerDocumentOptions = {
         operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
     };
     const document = SwaggerModule.createDocument(app, config, options);
+    document.security = [{ 'access-token': [] }];
     SwaggerModule.setup('api', app, document);
     app.useGlobalPipes(
         new ValidationPipe({
@@ -19,16 +31,16 @@ async function bootstrap() {
             forbidNonWhitelisted: true, // Empêche les champs non définis dans le DTO
             transform: true, // Transforme les types automatiquement (e.g., string en number)
             exceptionFactory: (errors) => {
-              return new BadRequestException(
-                errors.map((err) =>
-                err?.constraints
-                  ? Object.values(err.constraints).map((message) => ({
-                    field: err.property,
-                    message
-                  }))
-                  : [{ field: err.property, message: 'Validation failed without specific constraints' }]
-                )
-              );
+                return new BadRequestException(
+                    errors.map((err) =>
+                        err?.constraints
+                            ? Object.values(err.constraints).map((message) => ({
+                                  field: err.property,
+                                  message,
+                              }))
+                            : [{ field: err.property, message: 'Validation failed without specific constraints' }],
+                    ),
+                );
             },
         }),
     );

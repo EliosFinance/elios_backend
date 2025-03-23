@@ -10,8 +10,8 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import { ArticleCategory } from '../../article-category/entities/article-category.entity';
-import { ArticleContent } from '../../article-content/entities/article-content.entity';
+import { ArticleCategory } from '../../articles/entities/article-category-entity';
+import { ArticleContent } from '../../articles/entities/article-content-entity';
 import { Article } from '../../articles/entities/article.entity';
 import { Challenge } from '../../challenges/entities/challenge.entity';
 import { UserToChallenge } from '../../challenges/entities/usertochallenge.entity';

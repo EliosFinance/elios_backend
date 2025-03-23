@@ -1,8 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ArticleCategoryModule } from './api/article-category/article-category.module';
-import { ArticleContentModule } from './api/article-content/article-content.module';
-import { ArticlesModule } from './api/articles/articles.module';
 import { AuthModule } from './api/auth/auth.module';
 import { ChallengesModule } from './api/challenges/challenges.module';
 import { ContentTypeModule } from './api/content-type/content-type.module';
@@ -13,6 +10,7 @@ import { UsersModule } from './api/users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { ArticlesModule } from './api/articles/articles.module';
 import { AppService } from './app.service';
 import { LoggingInterceptor } from './logging.interceptor';
 
@@ -53,11 +51,9 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
         AuthModule,
         UsersModule,
         TransactionsModule,
-        ArticlesModule,
         EnterprisesModule,
         ChallengesModule,
-        ArticleCategoryModule,
-        ArticleContentModule,
+        ArticlesModule,
         ContentTypeModule,
         PrometheusModule.register(),
     ],
