@@ -8,7 +8,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { ArticleContent } from '../../article-content/entities/article-content.entity';
+import { ArticleContent } from '../../articles/entities/article-content-entity';
 
 export enum ContentTypeCategory {
     TEXT = 'text',
