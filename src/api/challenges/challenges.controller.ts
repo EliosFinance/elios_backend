@@ -1,10 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
 import { ChallengesService } from './challenges.service';
 import { AddUsersDto } from './dto/add-users.dto';
 import { CreateChallengeDto } from './dto/create-challenge-dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
-import { Challenge } from './entities/challenge.entity';
+import { ChallengeType } from './entities/challenge.entity';
 import { UserToChallenge } from './entities/usertochallenge.entity';
 
 @Controller('challenges')
@@ -13,22 +14,22 @@ export class ChallengesController {
     constructor(private readonly challengesService: ChallengesService) {}
 
     @Post()
-    create(@Body() createChallengeDto: CreateChallengeDto): Promise<Challenge> {
+    create(@Body() createChallengeDto: CreateChallengeDto): Promise<ChallengeType> {
         return this.challengesService.create(createChallengeDto);
     }
 
     @Get()
-    findAll(): Promise<Challenge[]> {
+    findAll(): Promise<ChallengeType[]> {
         return this.challengesService.findAll();
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string): Promise<Challenge> {
+    findOne(@Param('id') id: string): Promise<ChallengeType> {
         return this.challengesService.findOne(+id);
     }
 
     @Patch(':id')
-    update(@Param('id') id: string, @Body() updateChallengeDto: UpdateChallengeDto): Promise<Challenge> {
+    update(@Param('id') id: string, @Body() updateChallengeDto: UpdateChallengeDto): Promise<ChallengeType> {
         return this.challengesService.update(+id, updateChallengeDto);
     }
 
@@ -37,20 +38,16 @@ export class ChallengesController {
         return this.challengesService.remove(+id);
     }
 
-    @Post(':challengeId/user/:userId/start')
-    async StartChallenge(
-        @Param('challengeId') challengeId: number,
-        @Param('userId') userId: number,
-    ): Promise<UserToChallenge> {
-        return this.challengesService.startChallengeForUser(userId, challengeId);
+    @Post(':challengeId/start')
+    async StartChallenge(@Param('challengeId') challengeId: number, @UserFromRequest() user): Promise<UserToChallenge> {
+        return this.challengesService.startChallengeForUser(user.id, challengeId);
     }
 
-    @Post(':challengeId/user/:userId/update')
+    @Post(':challengeId/update')
     async UpdateUserChallenge(
         @Param('challengeId') challengeId: number,
-        @Param('userId') userId: number,
-        @Body() body: { event: string },
+        @UserFromRequest() user,
     ): Promise<UserToChallenge> {
-        return this.challengesService.updateUserChallenge(userId, challengeId, body.event);
+        return this.challengesService.updateUserChallenge(user.id, challengeId);
     }
 }

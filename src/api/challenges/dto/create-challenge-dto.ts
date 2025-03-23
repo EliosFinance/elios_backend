@@ -1,3 +1,4 @@
+import { ChallengeStateMachineConfigType } from '@src/types/ChallengeStepsTypes';
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { CategoryChallenge } from '../entities/challenge.entity';
 
@@ -21,6 +22,6 @@ export class CreateChallengeDto {
     @IsEnum(CategoryChallenge)
     category: CategoryChallenge;
 
-    @IsNotEmpty({ message: 'The config field is required' })
-    config: CategoryChallenge;
+    @IsNotEmpty({ message: 'The stateMachineConfig field is required' })
+    stateMachineConfig: ChallengeStateMachineConfigType;
 }

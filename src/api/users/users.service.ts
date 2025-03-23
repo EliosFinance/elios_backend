@@ -47,7 +47,7 @@ export class UsersService {
 
                 throw new Error(error.message) || 'An unknown error occurred.';
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error during Powens API call: ', error);
             throw new Error('Failed to initialize Powens auth token');
         }

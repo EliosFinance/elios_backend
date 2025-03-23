@@ -1,12 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bull';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CHALLENGE_WORKER_QUEUE_TOKEN } from '@src/types/ChallengeWorkerTypes';
+import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { createActor, createMachine } from 'xstate';
 import { Enterprise } from '../enterprises/entities/enterprise.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateChallengeDto } from './dto/create-challenge-dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
-import { Challenge } from './entities/challenge.entity';
+import { Challenge, ChallengeType } from './entities/challenge.entity';
 import { UserToChallenge } from './entities/usertochallenge.entity';
 
 @Injectable()
@@ -20,32 +23,11 @@ export class ChallengesService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(UserToChallenge)
         private readonly userToChallengeRepository: Repository<UserToChallenge>,
+        @Inject(CHALLENGE_WORKER_QUEUE_TOKEN)
+        private challengeQueue: Queue,
     ) {}
 
-    async create(createChallengeDto: CreateChallengeDto): Promise<Challenge> {
-        const { title, description, image, enterpriseId, category } = createChallengeDto;
-
-        const enterprise = await this.enterpriseRepository.findOneBy({ id: enterpriseId });
-        if (!enterprise) {
-            throw new NotFoundException('The enterprise was no found enterprises not found');
-        }
-
-        const newChallenge = this.challengeRepository.create({
-            title,
-            description,
-            image,
-            enterprise,
-            category,
-        });
-
-        return this.challengeRepository.save(newChallenge);
-    }
-
-    async findAll(): Promise<Challenge[]> {
-        return this.challengeRepository.find({ relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'] });
-    }
-
-    async findOne(id: number): Promise<Challenge> {
+    async findFullOne(id: number): Promise<Challenge> {
         const challenge = await this.challengeRepository.findOne({
             where: { id: id },
             relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
@@ -58,7 +40,58 @@ export class ChallengesService {
         return challenge;
     }
 
-    async update(id: number, updateChallengeDto: UpdateChallengeDto): Promise<Challenge> {
+    async create(createChallengeDto: CreateChallengeDto): Promise<ChallengeType> {
+        const { title, description, image, enterpriseId, category, stateMachineConfig } = createChallengeDto;
+
+        const enterprise = await this.enterpriseRepository.findOneBy({ id: enterpriseId });
+        if (!enterprise) {
+            throw new NotFoundException('Enterprise not found');
+        }
+
+        const newChallenge = this.challengeRepository.create({
+            title,
+            description,
+            image,
+            enterprise,
+            category,
+            stateMachineConfig: stateMachineConfig,
+        });
+
+        return this.challengeRepository.save(newChallenge);
+    }
+
+    async findAll(): Promise<ChallengeType[]> {
+        return this.challengeRepository.find({
+            relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
+            // omit the stateMachineConfig field
+            select: [
+                'id',
+                'title',
+                'description',
+                'image',
+                'userToChallenge',
+                'enterprise',
+                'category',
+                'creation_date',
+                'update_date',
+            ],
+        });
+    }
+
+    async findOne(id: number): Promise<ChallengeType> {
+        const challenge = await this.challengeRepository.findOne({
+            where: { id: id },
+            relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
+        });
+
+        if (!challenge) {
+            throw new NotFoundException(`The challenge with ID ${id} not found`);
+        }
+
+        return challenge;
+    }
+
+    async update(id: number, updateChallengeDto: UpdateChallengeDto): Promise<ChallengeType> {
         const challenge = await this.findOne(id);
 
         Object.assign(challenge, updateChallengeDto);
@@ -67,59 +100,66 @@ export class ChallengesService {
     }
 
     async remove(id: number): Promise<void> {
-        const challenge = await this.findOne(id);
+        const challenge = await this.findFullOne(id);
         await this.challengeRepository.remove(challenge);
     }
 
-    async startChallengeForUser(userId: number, challengeId: number) {
-        const user = await this.userRepository.findOne({ where: { id: userId } });
-        const challenge = await this.findOne(challengeId);
-
-        if (!user || !challenge) throw new Error('User or Challenge not found');
-
+    async startChallengeForUser(userId: number, challengeId: number): Promise<UserToChallenge> {
         const userChallenge = await this.userToChallengeRepository.findOne({
             where: { user: { id: userId }, challenge: { id: challengeId } },
         });
 
-        if (userChallenge) {
-            throw new Error('User already has this challenge');
-        }
+        if (userChallenge) throw new Error('User already has this challenge');
 
-        const machineConfig = {
-            id: `challenge-${challengeId}-user-${userId}`,
-            initial: 'not_started',
-            states: {
-                not_started: { on: { START: 'in_progress' } },
-                in_progress: { on: { COMPLETE: 'completed', FAIL: 'failed' } },
-                completed: { type: 'final' },
-                failed: { type: 'final' },
-            },
-        };
+        const challenge = await this.challengeRepository.findOne({ where: { id: challengeId } });
+        if (!challenge) throw new NotFoundException('Challenge not found');
+
+        const machine = createMachine(challenge.stateMachineConfig);
+        const actor = createActor(machine);
+        actor.start();
 
         const newUserChallenge = this.userToChallengeRepository.create({
-            user,
-            challenge,
-            stateMachineConfig: machineConfig,
-            currentState: machineConfig.initial,
+            user: { id: userId },
+            challenge: { id: challengeId },
+            currentState: String(actor.getSnapshot().value),
         });
 
-        return await this.userToChallengeRepository.save(newUserChallenge);
+        await this.userToChallengeRepository.save(newUserChallenge);
+
+        await this.challengeQueue.add('process-challenge', { userId, challengeId });
+
+        return newUserChallenge;
     }
 
-    async updateUserChallenge(userId: number, challengeId: number, event: string) {
+    async updateUserChallenge(userId: number, challengeId: number) {
         const userChallenge = await this.userToChallengeRepository.findOne({
             where: { user: { id: userId }, challenge: { id: challengeId } },
         });
 
         if (!userChallenge) throw new Error('User challenge state not found');
 
-        const machine = createMachine(userChallenge.stateMachineConfig);
-        const actor = createActor(machine);
+        const challenge = await this.findFullOne(challengeId);
+
+        const machine = createMachine(challenge.stateMachineConfig);
+        const machineWithContext = createMachine({
+            ...challenge.stateMachineConfig,
+            context: { currentState: userChallenge.currentState },
+        });
+        const actor = createActor(machineWithContext);
 
         actor.start();
-        actor.send({ type: event });
+
+        const nextTransitions = machine.getTransitionData(actor.getSnapshot(), { type: 'NEXT' });
+
+        if (!nextTransitions || nextTransitions.length === 0) {
+            throw new Error(`No valid transition from state: ${userChallenge.currentState}`);
+        }
+
+        actor.send({ type: 'NEXT' });
 
         userChallenge.currentState = String(actor.getSnapshot().value);
+        console.log(`User ${userId} transitioned challenge ${challengeId} to ${userChallenge.currentState}`);
+
         return await this.userToChallengeRepository.save(userChallenge);
     }
 }

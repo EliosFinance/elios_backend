@@ -1,3 +1,5 @@
+import { User } from '@src/api/users/entities/user.entity';
+import { ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/ChallengeStepsTypes';
 import {
     Column,
     CreateDateColumn,
@@ -7,14 +9,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 import { Challenge } from './challenge.entity';
-
-export enum ChallengeStatus {
-    DEFAULT = 'Default',
-    START = 'Start',
-    COMPLETED = 'Completed',
-}
 
 @Entity()
 export class UserToChallenge {
@@ -34,16 +29,6 @@ export class UserToChallenge {
     )
     @JoinColumn({ name: 'userId' })
     user: User;
-
-    @Column({
-        type: 'enum',
-        enum: ChallengeStatus,
-        default: ChallengeStatus.DEFAULT,
-    })
-    status: ChallengeStatus;
-
-    @Column('json', { nullable: true })
-    stateMachineConfig: any;
 
     @Column('varchar', { length: 255, default: 'default' })
     currentState: string;

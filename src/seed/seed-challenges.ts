@@ -1,4 +1,5 @@
 import { faker } from '@faker-js/faker';
+import { ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/ChallengeStepsTypes';
 import { CreateChallengeDto } from '../api/challenges/dto/create-challenge-dto';
 import { CategoryChallenge } from '../api/challenges/entities/challenge.entity';
 import { Enterprise } from '../api/enterprises/entities/enterprise.entity';
@@ -23,7 +24,7 @@ export const seedChallenges = async () => {
     try {
         const response = await axiosClient.get('/enterprises');
         enterprises = response.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching enterprises:', error.response?.data || error.message);
         return;
     }
@@ -47,13 +48,54 @@ export const seedChallenges = async () => {
                 'Developement',
                 'Personal',
             ]) as CategoryChallenge,
+            stateMachineConfig: {
+                id: faker.string.uuid(),
+                initial: ChallengeStepsEnum.PENDING,
+                states: {
+                    [ChallengeStepsEnum.PENDING]: {
+                        on: {
+                            [ChallengeEventEnum.START]: { target: ChallengeStepsEnum.START },
+                        },
+                    },
+                    [ChallengeStepsEnum.START]: {
+                        on: {
+                            [ChallengeEventEnum.IN_PROGRESS]: {
+                                target: [ChallengeStepsEnum.PROGRESS],
+                            },
+                        },
+                    },
+                    [ChallengeStepsEnum.PROGRESS]: {
+                        on: {
+                            [ChallengeEventEnum.REWARD_TO_CLAIM]: {
+                                target: [ChallengeStepsEnum.REWARD_CLAIMED],
+                            },
+                        },
+                    },
+                    [ChallengeStepsEnum.REWARD_CLAIMED]: {
+                        on: {
+                            [ChallengeEventEnum.CLOSE]: {
+                                target: [ChallengeStepsEnum.END],
+                            },
+                        },
+                    },
+                    [ChallengeStepsEnum.EXPIRE]: {
+                        on: {
+                            [ChallengeEventEnum.CLOSE]: {
+                                target: [ChallengeStepsEnum.END],
+                            },
+                        },
+                    },
+                    [ChallengeStepsEnum.END]: {},
+                },
+            },
         };
 
         try {
             const response = await axiosClient.post('/challenges', challengeData);
             console.log(`Challenge created: ${response.data.title}`);
-        } catch (error) {
-            console.error('Error creating challenge:', error.response?.data || error?.message || error);
+        } catch (error: any) {
+            console.error('Error creating challenge:', error?.response?.data || error?.message || error);
+            return;
         }
     }
 

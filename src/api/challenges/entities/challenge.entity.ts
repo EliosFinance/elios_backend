@@ -1,3 +1,4 @@
+import { ChallengeStateMachineConfigType } from '@src/types/ChallengeStepsTypes';
 import {
     Column,
     CreateDateColumn,
@@ -57,9 +58,14 @@ export class Challenge {
     // Obligatoire
     category: CategoryChallenge;
 
+    @Column('json', { nullable: false })
+    stateMachineConfig: ChallengeStateMachineConfigType;
+
     @CreateDateColumn()
     creation_date: Date;
 
     @UpdateDateColumn()
     update_date: Date;
 }
+
+export type ChallengeType = Omit<Challenge, 'stateMachineConfig'>;

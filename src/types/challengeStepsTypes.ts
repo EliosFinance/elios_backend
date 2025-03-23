@@ -1,28 +1,42 @@
-export type ChallengeConfig = {
+export type ChallengeStateMachineConfigType = {
     id: string;
-    currentState: string;
     initial: string;
-    states: Record<string, { on: Record<string /* ChallengeEventEnum */, ChallengeStepsEnum> }>;
+    states:
+        | {
+              [key in keyof typeof ChallengeStepsEnum]: {
+                  on: {
+                      [key in keyof typeof ChallengeEventEnum]: {
+                          target: ChallengeStepsEnum;
+                      };
+                  };
+              };
+          }
+        | {};
 };
+export enum ChallengeStepsEnum {
+    PENDING = 'PENDING',
+    START = 'START',
+    PROGRESS = 'PROGRESS',
+    PAUSE = 'PAUSE',
+    CANCEL = 'CANCEL',
+    REJECT = 'REJECT',
+    FAIL = 'FAIL',
+    COMPLETE = 'COMPLETE',
+    REWARD_CLAIMED = 'REWARD_TO_CLAIM',
+    EXPIRE = 'EXPIRE',
+    END = 'END',
+}
 
-export type ChallengeEventEnum = {
-    START: 'start';
-    PROGRESS: 'progress';
-    NEXT: 'NEXT';
-    REJECTED: 'rejected';
-    CANCEL: 'cancel';
-    COMPLETE: 'complete';
-    EXPIRE: 'expire';
-    WAIT: 'wait';
-    UNCOMPLETE: 'uncomplete';
-};
-
-export type ChallengeStepsEnum = {
-    START: 'start';
-    PROGRESS: 'progress';
-    COMPLETED: 'completed';
-    UNCOMPLETED: 'uncompleted';
-    CANCELLED: 'cancelled';
-    EXPIRED: 'expired';
-    WAITING: 'waiting';
-};
+export enum ChallengeEventEnum {
+    START = 'START',
+    PENDING = 'PENDING',
+    IN_PROGRESS = 'IN_PROGRESS',
+    PAUSED = 'PAUSED',
+    CANCELLED = 'CANCELLED',
+    REJECTED = 'REJECTED',
+    FAILED = 'FAILED',
+    COMPLETED = 'COMPLETED',
+    EXPIRED = 'EXPIRED',
+    REWARD_TO_CLAIM = 'REWARD_CLAIMED',
+    CLOSE = 'CLOSE',
+}
