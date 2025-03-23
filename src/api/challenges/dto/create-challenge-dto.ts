@@ -20,4 +20,7 @@ export class CreateChallengeDto {
 
     @IsEnum(CategoryChallenge)
     category: CategoryChallenge;
+
+    @IsNotEmpty({ message: 'The config field is required' })
+    config: CategoryChallenge;
 }

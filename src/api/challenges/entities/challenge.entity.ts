@@ -2,15 +2,12 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    JoinTable,
-    ManyToMany,
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 import { Enterprise } from '../../enterprises/entities/enterprise.entity';
-import { User } from '../../users/entities/user.entity';
 import { UserToChallenge } from './usertochallenge.entity';
 
 export enum CategoryChallenge {

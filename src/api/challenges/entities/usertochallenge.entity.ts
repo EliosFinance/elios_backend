@@ -42,6 +42,12 @@ export class UserToChallenge {
     })
     status: ChallengeStatus;
 
+    @Column('json', { nullable: true })
+    stateMachineConfig: any;
+
+    @Column('varchar', { length: 255, default: 'default' })
+    currentState: string;
+
     @CreateDateColumn()
     creation_date: Date;
 
