@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ArticleContent } from '../article-content/entities/article-content.entity';
+import { ArticleContent } from '../articles/entities/article-content-entity';
 import { CreateContentTypeDto } from './dto/create-content-type.dto';
 import { TextUpdateMode, UpdateContentTypeDto } from './dto/update-content-type.dto';
 import { ContentType } from './entities/content-type.entity';
