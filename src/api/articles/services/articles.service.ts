@@ -10,6 +10,7 @@ import { UpdateArticleDto } from '../dto/article-dtos';
 import { ArticleCategory } from '../entities/article-category-entity';
 import { ArticleContent } from '../entities/article-content-entity';
 import { Article } from '../entities/article.entity';
+import { serializeArticle } from '../utils/serialize-article';
 
 @Injectable()
 export class ArticlesService {
@@ -104,7 +105,7 @@ export class ArticlesService {
                 }
 
                 // Load the complete article with relations
-                return await manager.findOne(Article, {
+                const fullArticle = await manager.findOne(Article, {
                     where: { id: savedArticle.id },
                     relations: {
                         authors: true,
@@ -114,6 +115,7 @@ export class ArticlesService {
                         },
                     },
                 });
+                return serializeArticle(fullArticle);
             });
         } catch (error) {
             this.logger.error(`Failed to create article: ${error.message}`, error.stack);
@@ -147,10 +149,11 @@ export class ArticlesService {
             if (articleIds.length === 0) return [];
 
             // Load the complete articles with relations
-            return await this.articleRepository.find({
+            const articles = await this.articleRepository.find({
                 where: { id: In(articleIds) },
                 relations: ['authors', 'likes', 'reads', 'saved', 'articleContent'],
             });
+            return articles.map(serializeArticle);
         } catch (error) {
             this.logger.error(`Failed to find trending articles: ${error.message}`, error.stack);
             throw new BadRequestException('Failed to retrieve trending articles');
@@ -162,10 +165,11 @@ export class ArticlesService {
      */
     async userReads(userId: number): Promise<Article[]> {
         try {
-            return await this.articleRepository.find({
+            const articles = await this.articleRepository.find({
                 where: { reads: { id: userId } },
                 relations: ['authors', 'likes', 'reads', 'saved', 'articleContent'],
             });
+            return articles.map(serializeArticle);
         } catch (error) {
             this.logger.error(`Failed to find articles read by user ${userId}: ${error.message}`, error.stack);
             throw new BadRequestException(`Failed to retrieve articles read by user ID ${userId}`);
@@ -177,10 +181,11 @@ export class ArticlesService {
      */
     async userLikes(userId: number): Promise<Article[]> {
         try {
-            return await this.articleRepository.find({
+            const articles = await this.articleRepository.find({
                 where: { likes: { id: userId } },
                 relations: ['authors', 'likes', 'reads', 'saved', 'articleContent'],
             });
+            return articles.map(serializeArticle);
         } catch (error) {
             this.logger.error(`Failed to find articles liked by user ${userId}: ${error.message}`, error.stack);
             throw new BadRequestException(`Failed to retrieve articles liked by user ID ${userId}`);
@@ -192,9 +197,10 @@ export class ArticlesService {
      */
     async findAll(): Promise<Article[]> {
         try {
-            return await this.articleRepository.find({
+            const articles = await this.articleRepository.find({
                 relations: ['authors', 'likes', 'reads', 'saved', 'articleContent', 'category'],
             });
+            return articles.map(serializeArticle);
         } catch (error) {
             this.logger.error(`Failed to find all articles: ${error.message}`, error.stack);
             throw new BadRequestException('Failed to retrieve articles');
@@ -225,7 +231,7 @@ export class ArticlesService {
                 throw new NotFoundException(`Article with ID ${id} not found`);
             }
 
-            return article;
+            return serializeArticle(article);
         } catch (error) {
             this.logger.error(`Failed to find article ${id}: ${error.message}`, error.stack);
 
@@ -306,7 +312,7 @@ export class ArticlesService {
                 delete content.article;
             });
 
-            return updatedArticle;
+            return serializeArticle(updatedArticle);
         } catch (error) {
             this.logger.error(`Failed to update article ${id}: ${error.message}`, error.stack);
 
@@ -429,7 +435,8 @@ export class ArticlesService {
                 article.likes.push(user);
             }
 
-            return await this.articleRepository.save(article);
+            const updatedArticle = await this.articleRepository.save(article);
+            return serializeArticle(updatedArticle);
         } catch (error) {
             this.logger.error(
                 `Failed to toggle like for article ${articleId} by user ${addLikeDto.userId}: ${error.message}`,
@@ -479,10 +486,11 @@ export class ArticlesService {
             // Add the article to the user's read articles if not already there
             if (!article.reads.some((reader) => reader.id === addRead.userId)) {
                 article.reads.push(user);
-                return await this.articleRepository.save(article);
+                const updatedArticle = await this.articleRepository.save(article);
+                return serializeArticle(updatedArticle);
             }
 
-            return article;
+            return serializeArticle(article);
         } catch (error) {
             this.logger.error(
                 `Failed to mark article ${articleId} as read by user ${addRead.userId}: ${error.message}`,
@@ -537,7 +545,8 @@ export class ArticlesService {
                 article.saved.push(user);
             }
 
-            return await this.articleRepository.save(article);
+            const updatedArticle = await this.articleRepository.save(article);
+            return serializeArticle(updatedArticle);
         } catch (error) {
             this.logger.error(
                 `Failed to toggle save for article ${articleId} by user ${addSave.userId}: ${error.message}`,
