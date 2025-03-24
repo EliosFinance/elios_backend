@@ -2,8 +2,13 @@ import { faker } from '@faker-js/faker';
 import { ArticleContentType } from '../api/articles/entities/article-content-entity';
 import { ContentTypeCategory } from '../api/content-type/entities/content-type.entity';
 import { axiosClient } from './AxiosClient';
+import 'dotenv/config';
 
 export const seedArticles = async () => {
+    if (String(process.env.NODE_ENV) !== 'development') {
+        console.error('Seeding is only allowed in development mode');
+        return;
+    }
     try {
         const categories = await axiosClient.get('/article-category');
         let categoryId: number;
