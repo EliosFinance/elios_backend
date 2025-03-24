@@ -1,14 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { UpdateUserNotificationsDto } from './dto/update-user-notifications.dto';
+import { UserNotifications } from './entities/user-notifications.entity';
 import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-    constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) {}
+    constructor(
+        @InjectRepository(User) private readonly userRepository: Repository<User>,
+        @InjectRepository(UserNotifications) private readonly notificationsRepository: Repository<UserNotifications>,
+    ) {}
     async create(registerUserDto: RegisterUserDto): Promise<User> {
         const { username, email, password } = registerUserDto;
 
@@ -30,23 +35,34 @@ export class UsersService {
             user.powens_token = auth_token;
             user.powens_id = id_user;
 
-            return this.userRepository.save(user).catch((error) => {
-                const errorMessage = error.detail;
-                if (
-                    /(username)[\s\S]+(already exists)/.test(errorMessage) &&
-                    /(email)[\s\S]+(already exists)/.test(errorMessage)
-                ) {
+            try {
+                const savedUser = await this.userRepository.save(user);
+
+                const notifications = new UserNotifications();
+                notifications.user = savedUser;
+                await this.notificationsRepository.save(notifications);
+
+                return savedUser;
+            } catch (error) {
+                const errorMessage = error?.detail || error?.message || '';
+
+                const isUsernameTaken = /(username)[\s\S]+(already exists)/.test(errorMessage);
+                const isEmailTaken = /(email)[\s\S]+(already exists)/.test(errorMessage);
+
+                if (isUsernameTaken && isEmailTaken) {
                     throw new BadRequestException('The username and email are already taken');
                 }
-                if (/(username)[\s\S]+(already exists)/.test(errorMessage)) {
+
+                if (isUsernameTaken) {
                     throw new BadRequestException('The username is already taken');
                 }
-                if (/(email)[\s\S]+(already exists)/.test(errorMessage)) {
+
+                if (isEmailTaken) {
                     throw new BadRequestException('The email is already in use');
                 }
 
-                throw new Error(error.message) || 'An unknown error occurred.';
-            });
+                throw new Error(errorMessage || 'An unknown error occurred.');
+            }
         } catch (error) {
             console.error('Error during Powens API call: ', error);
             throw new Error('Failed to initialize Powens auth token');
@@ -55,14 +71,14 @@ export class UsersService {
 
     findAll(): Promise<User[]> {
         return this.userRepository.find({
-            relations: ['transactions', 'friends'],
+            relations: ['transactions', 'friends', 'notifications'],
         });
     }
 
     findOne(id: number): Promise<User> {
         return this.userRepository.findOne({
             where: { id },
-            relations: ['transactions', 'friends'],
+            relations: ['transactions', 'friends', 'notifications'],
         });
     }
 
@@ -89,5 +105,27 @@ export class UsersService {
 
     remove(id: number) {
         return `This action removes a #${id} user`;
+    }
+
+    async updateUserNotifications(id: number, updateUserNotificationsDto: UpdateUserNotificationsDto) {
+        const user = await this.findOne(id);
+        if (!user) throw new NotFoundException('User not found');
+
+        if (!user.notifications) {
+            user.notifications = this.notificationsRepository.create();
+            user.notifications.user = user;
+            await this.notificationsRepository.save(user.notifications);
+        }
+
+        Object.assign(user.notifications, updateUserNotificationsDto);
+        await this.notificationsRepository.save(user.notifications);
+        return user.notifications;
+    }
+
+    async triggerNotification(id: number, type: string) {
+        const user = await this.findOne(id);
+        if (!user) throw new NotFoundException('User not found');
+
+        return { message: `Notification '${type}' envoyée à ${user.username}` };
     }
 }
