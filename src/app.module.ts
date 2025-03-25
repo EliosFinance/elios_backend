@@ -10,6 +10,7 @@ import { UsersModule } from './api/users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import dataSource from '../data-source';
 import { ArticlesModule } from './api/articles/articles.module';
 import { AppService } from './app.service';
 import { LoggingInterceptor } from './logging.interceptor';
@@ -35,18 +36,7 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
 // });
 @Module({
     imports: [
-        TypeOrmModule.forRoot({
-            type: 'postgres',
-            host: String(process.env.POSTGRES_HOST),
-            port: parseInt(process.env.POSTGRES_PORT, 10),
-            username: String(process.env.POSTGRES_USER),
-            password: String(process.env.POSTGRES_PASSWORD),
-            database: String(process.env.POSTGRES_DB),
-            entities: ['**/entity/*.entity.ts'],
-            synchronize: true,
-            autoLoadEntities: true,
-            logging: false,
-        }),
+        TypeOrmModule.forRoot(dataSource.options),
         PowensModule,
         AuthModule,
         UsersModule,
