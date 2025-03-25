@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Enterprise } from '../enterprises/entities/enterprise.entity';
+import { toUserLight } from '../users/dto/user.utils';
 import { User } from '../users/entities/user.entity';
 import { AddUsersDto } from './dto/add-users.dto';
 import { CreateChallengeDto } from './dto/create-challenge-dto';
@@ -41,11 +42,21 @@ export class ChallengesService {
         return this.challengeRepository.save(newChallenge);
     }
 
-    async findAll(): Promise<Challenge[]> {
-        return this.challengeRepository.find({ relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'] });
+    async findAll(): Promise<any[]> {
+        const challenges = await this.challengeRepository.find({
+            relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
+        });
+
+        return challenges.map((challenge) => ({
+            ...challenge,
+            userToChallenge: challenge.userToChallenge.map((userToChallenge) => ({
+                ...userToChallenge,
+                user: toUserLight(userToChallenge.user),
+            })),
+        }));
     }
 
-    async findOne(id: number): Promise<Challenge> {
+    async findOne(id: number): Promise<any> {
         const challenge = await this.challengeRepository.findOne({
             where: { id: id },
             relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
@@ -55,7 +66,17 @@ export class ChallengesService {
             throw new NotFoundException(`The challenge with ID ${id} not found`);
         }
 
-        return challenge;
+        const userToChallengeWithLightUser = challenge.userToChallenge.map((userToChallenge) => {
+            return {
+                ...userToChallenge,
+                user: toUserLight(userToChallenge.user),
+            };
+        });
+
+        return {
+            ...challenge,
+            userToChallenge: userToChallengeWithLightUser,
+        };
     }
 
     async update(id: number, updateChallengeDto: UpdateChallengeDto): Promise<Challenge> {
@@ -71,7 +92,7 @@ export class ChallengesService {
         await this.challengeRepository.remove(challenge);
     }
 
-    async addUser(challengeId: number, addUserDto: AddUsersDto): Promise<UserToChallenge | boolean> {
+    async addUser(challengeId: number, addUserDto: AddUsersDto): Promise<any> {
         const challenge = await this.findOne(challengeId);
         const user = await this.userRepository.findOne({ where: { id: addUserDto.userId } });
 
@@ -94,6 +115,12 @@ export class ChallengesService {
             user: user,
             status: ChallengeStatus.START,
         });
-        return this.userToChallengeRepository.save(userToChallenge);
+
+        const savedUserToChallenge = await this.userToChallengeRepository.save(userToChallenge);
+
+        return {
+            ...savedUserToChallenge,
+            user: toUserLight(savedUserToChallenge.user),
+        };
     }
 }

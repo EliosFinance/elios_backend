@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker';
 import { CreateEnterpriseDto } from '../api/enterprises/dto/create-enterprise.dto';
 import { axiosClient } from './AxiosClient';
+import 'dotenv/config';
 
 export const seedEnterprises = async () => {
     const enterprises = await axiosClient.get('/enterprises');
-    if (process.env.NODE_ENV !== 'development') {
+    if (String(process.env.NODE_ENV) !== 'development') {
         console.error('Seeding is only allowed in development mode');
         return;
     }
