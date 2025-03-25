@@ -8,9 +8,13 @@ import { PowensModule } from './powens/powens.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
+import { BullModule } from '@nestjs/bullmq';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ChallengeQueueEventsListener } from '@src/workers/challenge.queue.events';
+import { ChallengeProcessor } from '@src/workers/challenge.worker';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { LoggingInterceptor } from '../logging.interceptor';
+import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
 
@@ -47,6 +51,15 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
             autoLoadEntities: true,
             logging: false,
         }),
+        BullModule.forRoot({
+            connection: {
+                host: process.env.REDIS_HOST,
+                port: parseInt(process.env.REDIS_PORT || '', 10),
+            },
+        }),
+        BullModule.registerQueue({
+            name: 'challenge',
+        }),
         PowensModule,
         AuthModule,
         UsersModule,
@@ -57,8 +70,11 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
         ContentTypeModule,
         PrometheusModule.register(),
     ],
+    controllers: [AppController],
     providers: [
         AppService,
+        ChallengeProcessor,
+        ChallengeQueueEventsListener,
         {
             provide: APP_INTERCEPTOR,
             useClass: LoggingInterceptor,
