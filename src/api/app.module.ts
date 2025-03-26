@@ -51,15 +51,6 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
             autoLoadEntities: true,
             logging: false,
         }),
-        BullModule.forRoot({
-            connection: {
-                host: process.env.REDIS_HOST,
-                port: parseInt(process.env.REDIS_PORT || '', 10),
-            },
-        }),
-        BullModule.registerQueue({
-            name: 'challenge',
-        }),
         PowensModule,
         AuthModule,
         UsersModule,
@@ -73,7 +64,6 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
     controllers: [AppController],
     providers: [
         AppService,
-        ChallengeQueueEventsListener,
         {
             provide: APP_INTERCEPTOR,
             useClass: LoggingInterceptor,

@@ -54,34 +54,50 @@ export const seedChallenges = async () => {
                 states: {
                     [ChallengeStepsEnum.PENDING]: {
                         on: {
-                            [ChallengeEventEnum.START]: { target: ChallengeStepsEnum.START },
+                            [ChallengeEventEnum.START]: {
+                                target: ChallengeStepsEnum.START,
+                            },
                         },
                     },
                     [ChallengeStepsEnum.START]: {
                         on: {
-                            [ChallengeEventEnum.IN_PROGRESS]: {
-                                target: [ChallengeStepsEnum.PROGRESS],
+                            [ChallengeEventEnum.PROGRESS]: {
+                                target: ChallengeStepsEnum.PROGRESS,
                             },
                         },
                     },
                     [ChallengeStepsEnum.PROGRESS]: {
                         on: {
                             [ChallengeEventEnum.REWARD_TO_CLAIM]: {
-                                target: [ChallengeStepsEnum.REWARD_CLAIMED],
+                                target: ChallengeStepsEnum.REWARD_TO_CLAIM,
+                            },
+                        },
+                    },
+                    [ChallengeStepsEnum.REWARD_TO_CLAIM]: {
+                        on: {
+                            [ChallengeEventEnum.REWARD_CLAIMED]: {
+                                target: ChallengeStepsEnum.REWARD_CLAIMED,
                             },
                         },
                     },
                     [ChallengeStepsEnum.REWARD_CLAIMED]: {
                         on: {
-                            [ChallengeEventEnum.CLOSE]: {
-                                target: [ChallengeStepsEnum.END],
+                            [ChallengeEventEnum.END]: {
+                                target: ChallengeStepsEnum.END,
                             },
                         },
                     },
                     [ChallengeStepsEnum.EXPIRE]: {
                         on: {
                             [ChallengeEventEnum.CLOSE]: {
-                                target: [ChallengeStepsEnum.END],
+                                target: ChallengeStepsEnum.CLOSE,
+                            },
+                        },
+                    },
+                    [ChallengeStepsEnum.CLOSE]: {
+                        on: {
+                            [ChallengeEventEnum.CLOSE]: {
+                                target: ChallengeStepsEnum.END,
                             },
                         },
                     },

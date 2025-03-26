@@ -11,10 +11,4 @@ export class AppController {
     getHello(): string {
         return this.appService.getHello();
     }
-
-    @Post('TEST')
-    async test(): Promise<string> {
-        await this.appService.test();
-        return 'job added to the queue';
-    }
 }

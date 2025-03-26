@@ -1,7 +1,8 @@
 import { OnQueueEvent, QueueEventsHost, QueueEventsListener } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
+import { CHALLENGE_QUEUE_NAME } from '@src/types/ChallengeStepsTypes';
 
-@QueueEventsListener('challenge')
+@QueueEventsListener(CHALLENGE_QUEUE_NAME)
 export class ChallengeQueueEventsListener extends QueueEventsHost {
     logger = new Logger('Queue');
 

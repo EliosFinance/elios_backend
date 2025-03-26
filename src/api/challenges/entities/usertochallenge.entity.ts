@@ -31,7 +31,7 @@ export class UserToChallenge {
     user: User;
 
     @Column('varchar', { length: 255, default: 'default' })
-    currentState: string;
+    currentState: string | null;
 
     @CreateDateColumn()
     creation_date: Date;
