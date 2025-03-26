@@ -7,6 +7,7 @@ async function main() {
         await seedEnterprises();
         await seedArticles();
         await seedChallenges();
+        await seedArticles();
     } catch (error) {
         console.error(error);
     }

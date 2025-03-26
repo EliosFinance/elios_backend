@@ -4,10 +4,11 @@ import { CreateChallengeDto } from '../api/challenges/dto/create-challenge-dto';
 import { CategoryChallenge } from '../api/challenges/entities/challenge.entity';
 import { Enterprise } from '../api/enterprises/entities/enterprise.entity';
 import { axiosClient } from './AxiosClient';
+import 'dotenv/config';
 
 export const seedChallenges = async () => {
     const challenges = await axiosClient.get('/challenges');
-    if (process.env.NODE_ENV !== 'development') {
+    if (String(process.env.NODE_ENV) !== 'development') {
         console.error('Seeding is only allowed in development mode');
         return;
     }

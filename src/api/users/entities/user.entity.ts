@@ -3,9 +3,11 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    JoinColumn,
     JoinTable,
     ManyToMany,
     OneToMany,
+    OneToOne,
     PrimaryGeneratedColumn,
     Unique,
     UpdateDateColumn,
@@ -16,6 +18,7 @@ import { Article } from '../../articles/entities/article.entity';
 import { Challenge } from '../../challenges/entities/challenge.entity';
 import { UserToChallenge } from '../../challenges/entities/usertochallenge.entity';
 import { Transaction } from '../../transactions/entities/transaction.entity';
+import { UserNotifications } from './user-notifications.entity';
 
 @Entity()
 @Unique(['username', 'email'])
@@ -102,6 +105,13 @@ export class User {
         (articleContent) => articleContent.saved,
     )
     savedArticlesContent: Article[];
+
+    @OneToOne(
+        () => UserNotifications,
+        (notifications) => notifications.user,
+        { cascade: true },
+    )
+    notifications: UserNotifications;
 
     @CreateDateColumn()
     creation_date: Date;

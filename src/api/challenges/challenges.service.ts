@@ -5,6 +5,7 @@ import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
 import { createActor, createMachine } from 'xstate';
 import { Enterprise } from '../enterprises/entities/enterprise.entity';
+import { toUserLight } from '../users/dto/user.utils';
 import { User } from '../users/entities/user.entity';
 import { CreateChallengeDto } from './dto/create-challenge-dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
@@ -57,8 +58,8 @@ export class ChallengesService {
         return this.challengeRepository.save(newChallenge);
     }
 
-    async findAll(): Promise<ChallengeType[]> {
-        return this.challengeRepository.find({
+    async findAll(): Promise<any[]> {
+        const challenges = await this.challengeRepository.find({
             relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
             // omit the stateMachineConfig field
             select: [
@@ -73,9 +74,17 @@ export class ChallengesService {
                 'update_date',
             ],
         });
+
+        return challenges.map((challenge) => ({
+            ...challenge,
+            userToChallenge: challenge.userToChallenge.map((userToChallenge) => ({
+                ...userToChallenge,
+                user: toUserLight(userToChallenge.user),
+            })),
+        }));
     }
 
-    async findOne(id: number): Promise<ChallengeType> {
+    async findOne(id: number): Promise<any> {
         const challenge = await this.challengeRepository.findOne({
             where: { id: id },
             relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
@@ -85,7 +94,17 @@ export class ChallengesService {
             throw new NotFoundException(`The challenge with ID ${id} not found`);
         }
 
-        return challenge;
+        const userToChallengeWithLightUser = challenge.userToChallenge.map((userToChallenge) => {
+            return {
+                ...userToChallenge,
+                user: toUserLight(userToChallenge.user),
+            };
+        });
+
+        return {
+            ...challenge,
+            userToChallenge: userToChallengeWithLightUser,
+        };
     }
 
     async update(id: number, updateChallengeDto: UpdateChallengeDto): Promise<ChallengeType> {
@@ -111,7 +130,7 @@ export class ChallengesService {
         return await this.userToChallengeRepository.save(userChallenge);
     }
 
-    async addUserToChallenge(userId: number, challengeId: number): Promise<UserToChallenge> {
+    async addUserToChallenge(userId: number, challengeId: number): Promise<any> {
         const user = await this.userRepository.findOne({
             where: { id: userId },
         });
@@ -130,6 +149,11 @@ export class ChallengesService {
             currentState: challenge.stateMachineConfig.initial,
         });
 
-        return this.userToChallengeRepository.save(userChallenge);
+        const savedUserToChallenge = await this.userToChallengeRepository.save(userChallenge);
+
+        return {
+            ...savedUserToChallenge,
+            user: toUserLight(savedUserToChallenge.user),
+        };
     }
 }

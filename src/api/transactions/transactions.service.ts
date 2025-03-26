@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { lastValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
+import { toUserLight } from '../users/dto/user.utils';
 import { UsersService } from '../users/users.service';
 import { Transaction } from './entities/transaction.entity';
 
@@ -45,11 +46,20 @@ export class TransactionsService {
     }
 
     async getUserTransactions(userId: number, order: 'ASC' | 'DESC' = 'DESC'): Promise<Transaction[]> {
-        return this.transactionsRepository.find({
+        const transactions = await this.transactionsRepository.find({
             where: { user: { id: userId } },
             order: {
                 date: order,
             },
+        });
+
+        return transactions.map((transaction) => {
+            const serializedTransaction = {
+                ...transaction,
+                user: toUserLight(transaction.user),
+            };
+
+            return serializedTransaction as Transaction;
         });
     }
 
@@ -59,6 +69,8 @@ export class TransactionsService {
         if (!user) {
             throw new Error('No user with this id');
         }
+
+        const userLight = toUserLight(user);
 
         for (const tx of transactions) {
             const existingTransaction = await this.transactionsRepository.findOneBy({
@@ -76,7 +88,7 @@ export class TransactionsService {
             } else {
                 const newTransaction = this.transactionsRepository.create({
                     ...this.mapTransactionsToEntity(tx),
-                    user,
+                    user: userLight,
                 });
                 await this.transactionsRepository.save(newTransaction);
             }
