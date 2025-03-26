@@ -5,7 +5,6 @@ import { seedEnterprises } from './seed-enterprises';
 async function main() {
     try {
         await seedEnterprises();
-        await seedArticles();
         await seedChallenges();
         await seedArticles();
     } catch (error) {

@@ -1,3 +1,4 @@
+import { UserLightType } from '@src/api/users/dto/user-light.dto';
 import { User } from '@src/api/users/entities/user.entity';
 import { ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/ChallengeStepsTypes';
 import {
@@ -28,7 +29,7 @@ export class UserToChallenge {
         (user) => user.userToChallenge,
     )
     @JoinColumn({ name: 'userId' })
-    user: User;
+    user: User | UserLightType;
 
     @Column('varchar', { length: 255, default: 'default' })
     currentState: string | null;

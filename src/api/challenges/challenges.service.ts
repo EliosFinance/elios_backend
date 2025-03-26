@@ -84,7 +84,7 @@ export class ChallengesService {
         }));
     }
 
-    async findOne(id: number): Promise<any> {
+    async findOne(id: number): Promise<ChallengeType> {
         const challenge = await this.challengeRepository.findOne({
             where: { id: id },
             relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
@@ -130,7 +130,7 @@ export class ChallengesService {
         return await this.userToChallengeRepository.save(userChallenge);
     }
 
-    async addUserToChallenge(userId: number, challengeId: number): Promise<any> {
+    async addUserToChallenge(userId: number, challengeId: number): Promise<UserToChallenge> {
         const user = await this.userRepository.findOne({
             where: { id: userId },
         });
