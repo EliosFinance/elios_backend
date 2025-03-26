@@ -60,19 +60,11 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
         BullModule.registerQueue({
             name: 'challenge',
         }),
-        PowensModule,
-        AuthModule,
-        UsersModule,
-        TransactionsModule,
-        EnterprisesModule,
-        ChallengesModule,
-        ArticlesModule,
-        ContentTypeModule,
         PrometheusModule.register(),
     ],
-    controllers: [AppController],
+    controllers: [],
     providers: [
-        AppService,
+        ChallengeProcessor,
         ChallengeQueueEventsListener,
         {
             provide: APP_INTERCEPTOR,
@@ -80,4 +72,4 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
         },
     ],
 })
-export class AppModule {}
+export class AppWorkerModule {}
