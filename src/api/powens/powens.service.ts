@@ -40,7 +40,7 @@ export class PowensService {
             }
 
             return { message: 'Connectors synchronized successfully.' };
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error synchronizing connectors:', error.message);
             throw new Error('Failed to synchronizing connectors:');
         }

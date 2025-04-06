@@ -1,19 +1,20 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './api/auth/auth.module';
-import { ChallengesModule } from './api/challenges/challenges.module';
-import { ContentTypeModule } from './api/content-type/content-type.module';
-import { EnterprisesModule } from './api/enterprises/enterprises.module';
-import { PowensModule } from './api/powens/powens.module';
-import { TransactionsModule } from './api/transactions/transactions.module';
-import { UsersModule } from './api/users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { ChallengesModule } from './challenges/challenges.module';
+import { ContentTypeModule } from './content-type/content-type.module';
+import { EnterprisesModule } from './enterprises/enterprises.module';
+import { PowensModule } from './powens/powens.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { UsersModule } from './users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
-import { ArticlesModule } from './api/articles/articles.module';
-import { QuizzModule } from './api/quizz/quizz.module';
+import { LoggingInterceptor } from '../logging.interceptor';
+import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { LoggingInterceptor } from './logging.interceptor';
+import { ArticlesModule } from './articles/articles.module';
+import { QuizzModule } from './quizz/quizz.module';
 
 console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
 console.warn('POSTGRES_PORT', process.env.POSTGRES_PORT);
@@ -26,14 +27,14 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: String(process.env.POSTGRES_HOST),
-            port: parseInt(process.env.POSTGRES_PORT, 10),
+            port: parseInt(process.env.POSTGRES_PORT || '', 10),
             username: String(process.env.POSTGRES_USER),
             password: String(process.env.POSTGRES_PASSWORD),
             database: String(process.env.POSTGRES_DB),
             entities: ['**/entity/*.entity.ts'],
-            migrations: ['src/migrations/*.ts'],
             synchronize: true,
-            logging: true,
+            autoLoadEntities: true,
+            logging: false,
         }),
         PowensModule,
         AuthModule,
@@ -46,6 +47,7 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
         ContentTypeModule,
         PrometheusModule.register(),
     ],
+    controllers: [AppController],
     providers: [
         AppService,
         {

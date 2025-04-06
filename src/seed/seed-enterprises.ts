@@ -24,7 +24,7 @@ export const seedEnterprises = async () => {
         try {
             const response = await axiosClient.post('/enterprises', enterpriseData);
             console.log(`Enterprise created: ${response.data.name}`);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error creating enterprise:', JSON.stringify(error, null, 2));
         }
     }

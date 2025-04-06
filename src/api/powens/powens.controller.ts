@@ -58,7 +58,7 @@ export class PowensController {
             return {
                 url: `http://localhost:5173/?token=${tokenData.access_token}`,
             };
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching token: ', error);
         }
     }

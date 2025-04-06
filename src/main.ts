@@ -1,7 +1,7 @@
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerDocumentOptions, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
+import { AppModule } from './api/app.module';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { cors: true });
@@ -20,7 +20,7 @@ async function bootstrap() {
         .build();
 
     const options: SwaggerDocumentOptions = {
-        operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+        operationIdFactory: (_controllerKey: string, methodKey: string) => methodKey,
     };
     const document = SwaggerModule.createDocument(app, config, options);
     document.security = [{ 'access-token': [] }];
