@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Article } from '@src/api/articles/entities/article.entity';
-import { Challenge } from '@src/api/challenges/entities/challenge.entity';
-import { ArticleCategoriesEnum } from '@src/seed/seed-articles';
+import { Article } from 'src/api/articles/entities/article.entity';
+import { Challenge } from 'src/api/challenges/entities/challenge.entity';
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Question } from './question.entity';
 
@@ -53,7 +52,7 @@ export class Quizz {
 
     @ApiProperty({ description: 'Theme of the quiz' })
     @Column()
-    theme: ArticleCategoriesEnum;
+    theme: string;
 
     @ApiProperty({ description: 'Difficulty level of the quiz' })
     @Column()

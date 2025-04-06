@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArticleCategoriesEnum } from '@src/seed/seed-articles';
 import { IsNotEmpty, IsString } from 'class-validator';
 import { QuizzDifficultyEnum } from '../../entities/quizz.entity';
 
@@ -34,7 +33,7 @@ export class CreateQuizzDto {
     })
     @IsNotEmpty()
     @IsString()
-    theme: ArticleCategoriesEnum;
+    theme: string;
 
     @ApiProperty({
         description: 'Difficulty level of the quiz',

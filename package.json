@@ -11,6 +11,7 @@
         "build:path": "resolve-tspaths",
         "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
         "start": "nest start",
+        "dev": "yarn start:dev",
         "start:dev": "nest start --watch",
         "start:worker": "ts-node ./src/main-worker.ts",
         "start:debug": "nest start --debug --watch",

@@ -22,6 +22,19 @@ console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
 console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
 console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
 
+// // log the connexion with the database
+// console.warn('DB_STATUS', {
+//     type: 'postgres',
+//     host: String(process.env.POSTGRES_HOST),
+//     port: parseInt(process.env.POSTGRES_PORT, 10),
+//     username: String(process.env.POSTGRES_USER),
+//     password: String(process.env.POSTGRES_PASSWORD),
+//     database: String(process.env.POSTGRES_DB),
+//     entities: ['**/entity/*.entity.ts'],
+//     synchronize: true,
+//     autoLoadEntities: true,
+//     logging: false,
+// });
 @Module({
     imports: [
         TypeOrmModule.forRoot({
