@@ -23,7 +23,7 @@ import {
     ApiTags,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { getUserIdFromToken } from '../../../helpers/extractJwt';
+import { getUserIdFromToken } from '../../../helpers/jwt/extractJwt';
 import { Public } from '../../auth/decorator/public.decorator';
 import {
     CreateArticleContentDto,
