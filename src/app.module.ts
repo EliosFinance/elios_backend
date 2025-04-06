@@ -10,8 +10,8 @@ import { UsersModule } from './api/users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
-import dataSource from '../data-source';
 import { ArticlesModule } from './api/articles/articles.module';
+import { QuizzModule } from './api/quizz/quizz.module';
 import { AppService } from './app.service';
 import { LoggingInterceptor } from './logging.interceptor';
 
@@ -21,28 +21,27 @@ console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
 console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
 console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
 
-// // log the connexion with the database
-// console.warn('DB_STATUS', {
-//     type: 'postgres',
-//     host: String(process.env.POSTGRES_HOST),
-//     port: parseInt(process.env.POSTGRES_PORT, 10),
-//     username: String(process.env.POSTGRES_USER),
-//     password: String(process.env.POSTGRES_PASSWORD),
-//     database: String(process.env.POSTGRES_DB),
-//     entities: ['**/entity/*.entity.ts'],
-//     synchronize: true,
-//     autoLoadEntities: true,
-//     logging: false,
-// });
 @Module({
     imports: [
-        TypeOrmModule.forRoot(dataSource.options),
+        TypeOrmModule.forRoot({
+            type: 'postgres',
+            host: String(process.env.POSTGRES_HOST),
+            port: parseInt(process.env.POSTGRES_PORT, 10),
+            username: String(process.env.POSTGRES_USER),
+            password: String(process.env.POSTGRES_PASSWORD),
+            database: String(process.env.POSTGRES_DB),
+            entities: ['**/entity/*.entity.ts'],
+            migrations: ['src/migrations/*.ts'],
+            synchronize: true,
+            logging: true,
+        }),
         PowensModule,
         AuthModule,
         UsersModule,
         TransactionsModule,
         EnterprisesModule,
         ChallengesModule,
+        QuizzModule,
         ArticlesModule,
         ContentTypeModule,
         PrometheusModule.register(),
