@@ -56,4 +56,11 @@ export class CreateQuizzDto {
     })
     @IsNotEmpty()
     challengeId: number;
+
+    @ApiProperty({
+        description: 'ID of the user who has completed the quiz',
+        example: 1,
+    })
+    @IsNotEmpty()
+    finishers: number[];
 }
