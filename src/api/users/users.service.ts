@@ -27,7 +27,6 @@ export class UsersService {
 
         try {
             const response = await axios.post('https://lperrenot-sandbox.biapi.pro/2.0/auth/init', payload);
-            console.log(response);
             const { auth_token, id_user } = response.data;
             const user = new User();
             user.username = username;
