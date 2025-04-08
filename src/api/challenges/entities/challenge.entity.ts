@@ -1,16 +1,14 @@
+import { ChallengeStateMachineConfigType } from '@src/types/ChallengeStepsTypes';
 import {
     Column,
     CreateDateColumn,
     Entity,
-    JoinTable,
-    ManyToMany,
     ManyToOne,
     OneToMany,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
 import { Enterprise } from '../../enterprises/entities/enterprise.entity';
-import { User } from '../../users/entities/user.entity';
 import { UserToChallenge } from './usertochallenge.entity';
 
 export enum CategoryChallenge {
@@ -60,9 +58,14 @@ export class Challenge {
     // Obligatoire
     category: CategoryChallenge;
 
+    @Column('json', { nullable: false })
+    stateMachineConfig: ChallengeStateMachineConfigType;
+
     @CreateDateColumn()
     creation_date: Date;
 
     @UpdateDateColumn()
     update_date: Date;
 }
+
+export type ChallengeType = Omit<Challenge, 'stateMachineConfig'>;

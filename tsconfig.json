@@ -1,12 +1,12 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "CommonJS",
         "declaration": true,
         "removeComments": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
-        "target": "ES2021",
+        "target": "ESNext",
         "sourceMap": true,
         "outDir": "./dist",
         "baseUrl": "./",
@@ -16,6 +16,29 @@
         "noImplicitAny": false,
         "strictBindCallApply": false,
         "forceConsistentCasingInFileNames": false,
-        "noFallthroughCasesInSwitch": false
+        "noFallthroughCasesInSwitch": false,
+        "moduleResolution": "Node",
+        "typeRoots": ["./node_modules/@types", "./src/types"],
+        "lib": ["ES6", "DOM", "ESNext"],
+        "types": ["node", "jest"],
+
+        "rootDir": "./src",
+        "paths": {
+            "@src/*": ["./src/*"]
+        }
+    },
+    "ts-node": {
+        // It is faster to skip typechecking.
+        // Remove if you want ts-node to do typechecking.
+        "transpileOnly": false,
+        "files": true,
+        "require": ["tsconfig-paths/register"],
+        "compilerOptions": {
+            // compilerOptions specified here will override those declared below,
+            // but *only* in ts-node.  Useful if you want ts-node and tsc to use
+            // different options with a single tsconfig.json.
+        },
+        "include": ["src/**/*", "src/fill-pgsql-database"],
+        "exclude": ["./node_modules", "./lib", "./dist"]
     }
 }

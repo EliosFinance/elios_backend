@@ -19,7 +19,7 @@
         "rules": {
             "recommended": false,
             "complexity": {
-                "noBannedTypes": "error",
+                "noBannedTypes": "warn",
                 "noExtraBooleanCast": "error",
                 "noMultipleSpacesInRegularExpressionLiterals": "error",
                 "noUselessCatch": "error",

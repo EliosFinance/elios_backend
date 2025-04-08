@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { User } from '../../users/user.decorator';
 import { RequestLogsService } from '../services/request-logs.service';
 
 @ApiTags('Request Logs')
@@ -21,7 +21,7 @@ export class RequestLogsController {
     @Get('my-requests')
     @ApiQuery({ name: 'limit', required: false, type: Number })
     @ApiQuery({ name: 'offset', required: false, type: Number })
-    async findMyRequests(@User() user: any, @Query('limit') limit = 100, @Query('offset') offset = 0) {
+    async findMyRequests(@UserFromRequest() user: any, @Query('limit') limit = 100, @Query('offset') offset = 0) {
         return this.requestLogsService.findByUserId(user.id, +limit, +offset);
     }
 }

@@ -1,14 +1,16 @@
+import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Queue } from 'bullmq';
 import { Repository } from 'typeorm';
+import { createActor, createMachine } from 'xstate';
 import { Enterprise } from '../enterprises/entities/enterprise.entity';
 import { toUserLight } from '../users/dto/user.utils';
 import { User } from '../users/entities/user.entity';
-import { AddUsersDto } from './dto/add-users.dto';
 import { CreateChallengeDto } from './dto/create-challenge-dto';
 import { UpdateChallengeDto } from './dto/update-challenge.dto';
-import { Challenge } from './entities/challenge.entity';
-import { ChallengeStatus, UserToChallenge } from './entities/usertochallenge.entity';
+import { Challenge, ChallengeType } from './entities/challenge.entity';
+import { UserToChallenge } from './entities/usertochallenge.entity';
 
 @Injectable()
 export class ChallengesService {
@@ -23,12 +25,25 @@ export class ChallengesService {
         private readonly userToChallengeRepository: Repository<UserToChallenge>,
     ) {}
 
-    async create(createChallengeDto: CreateChallengeDto): Promise<Challenge> {
-        const { title, description, image, enterpriseId, category } = createChallengeDto;
+    async findFullOne(id: number): Promise<Challenge> {
+        const challenge = await this.challengeRepository.findOne({
+            where: { id: id },
+            relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
+        });
+
+        if (!challenge) {
+            throw new NotFoundException(`The challenge with ID ${id} not found`);
+        }
+
+        return challenge;
+    }
+
+    async create(createChallengeDto: CreateChallengeDto): Promise<ChallengeType> {
+        const { title, description, image, enterpriseId, category, stateMachineConfig } = createChallengeDto;
 
         const enterprise = await this.enterpriseRepository.findOneBy({ id: enterpriseId });
         if (!enterprise) {
-            throw new NotFoundException('The enterprise was no found enterprises not found');
+            throw new NotFoundException('Enterprise not found');
         }
 
         const newChallenge = this.challengeRepository.create({
@@ -37,6 +52,7 @@ export class ChallengesService {
             image,
             enterprise,
             category,
+            stateMachineConfig: stateMachineConfig,
         });
 
         return this.challengeRepository.save(newChallenge);
@@ -45,6 +61,18 @@ export class ChallengesService {
     async findAll(): Promise<any[]> {
         const challenges = await this.challengeRepository.find({
             relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
+            // omit the stateMachineConfig field
+            select: [
+                'id',
+                'title',
+                'description',
+                'image',
+                'userToChallenge',
+                'enterprise',
+                'category',
+                'creation_date',
+                'update_date',
+            ],
         });
 
         return challenges.map((challenge) => ({
@@ -56,7 +84,7 @@ export class ChallengesService {
         }));
     }
 
-    async findOne(id: number): Promise<any> {
+    async findOne(id: number): Promise<ChallengeType> {
         const challenge = await this.challengeRepository.findOne({
             where: { id: id },
             relations: ['enterprise', 'userToChallenge', 'userToChallenge.user'],
@@ -79,7 +107,7 @@ export class ChallengesService {
         };
     }
 
-    async update(id: number, updateChallengeDto: UpdateChallengeDto): Promise<Challenge> {
+    async update(id: number, updateChallengeDto: UpdateChallengeDto): Promise<ChallengeType> {
         const challenge = await this.findOne(id);
 
         Object.assign(challenge, updateChallengeDto);
@@ -88,35 +116,40 @@ export class ChallengesService {
     }
 
     async remove(id: number): Promise<void> {
-        const challenge = await this.findOne(id);
+        const challenge = await this.findFullOne(id);
         await this.challengeRepository.remove(challenge);
     }
 
-    async addUser(challengeId: number, addUserDto: AddUsersDto): Promise<any> {
-        const challenge = await this.findOne(challengeId);
-        const user = await this.userRepository.findOne({ where: { id: addUserDto.userId } });
+    async getUserChallenge(userId: number, challengeId: number): Promise<UserToChallenge> {
+        return await this.userToChallengeRepository.findOne({
+            where: { user: { id: userId }, challenge: { id: challengeId } },
+        });
+    }
 
+    async updateUserChallengeState(userChallenge: UserToChallenge): Promise<UserToChallenge> {
+        return await this.userToChallengeRepository.save(userChallenge);
+    }
+
+    async addUserToChallenge(userId: number, challengeId: number): Promise<UserToChallenge> {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+        });
         if (!user) {
-            throw new NotFoundException(`User with ID ${addUserDto.userId} not found`);
+            throw new NotFoundException('User not found');
         }
 
+        const challenge = await this.findFullOne(challengeId);
         if (!challenge) {
-            throw new NotFoundException(`Challenge with ID ${addUserDto.userId} not found`);
+            throw new NotFoundException('Challenge not found');
         }
 
-        const alreadyUser = challenge.userToChallenge.some((u) => u.user.id === user.id);
-
-        if (alreadyUser) {
-            throw new NotFoundException(`User ${addUserDto.userId} already started this challenge ${challenge.id}`);
-        }
-
-        const userToChallenge = this.userToChallengeRepository.create({
-            challenge: challenge,
-            user: user,
-            status: ChallengeStatus.START,
+        const userChallenge = this.userToChallengeRepository.create({
+            user,
+            challenge,
+            currentState: challenge.stateMachineConfig.initial,
         });
 
-        const savedUserToChallenge = await this.userToChallengeRepository.save(userToChallenge);
+        const savedUserToChallenge = await this.userToChallengeRepository.save(userChallenge);
 
         return {
             ...savedUserToChallenge,

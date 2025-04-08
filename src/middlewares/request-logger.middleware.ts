@@ -1,10 +1,10 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { extractJwt, getUserIdFromToken } from '@src/helpers/jwt/extractJwt';
 import { NextFunction, Request, Response } from 'express';
 import { Repository } from 'typeorm';
 import { RequestLogsService } from '../api/request-logs/services/request-logs.service';
 import { User } from '../api/users/entities/user.entity';
-import { extractJwt } from '../helpers/extractJwt';
 
 @Injectable()
 export class RequestLoggerMiddleware implements NestMiddleware {
@@ -37,9 +37,9 @@ export class RequestLoggerMiddleware implements NestMiddleware {
                 const authHeader = req.headers.authorization;
                 if (authHeader && authHeader.startsWith('Bearer ')) {
                     try {
-                        const decoded = extractJwt(authHeader);
-                        if (decoded && decoded.sub) {
-                            userId = Number(decoded.sub);
+                        const decoded = getUserIdFromToken(authHeader);
+                        if (decoded) {
+                            userId = Number(decoded);
                             user = await this.userRepository.findOne({ where: { id: userId } });
                         }
                     } catch (error) {
