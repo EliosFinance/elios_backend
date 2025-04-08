@@ -175,7 +175,7 @@ export class QuizzService {
         const option = this.questionOptionRepository.create({
             ...createQuestionOptionDto,
             question,
-            isCorrect: createQuestionOptionDto.isCorrect ? 'true' : 'false',
+            isCorrect: createQuestionOptionDto.isCorrect,
         });
 
         return this.questionOptionRepository.save(option);

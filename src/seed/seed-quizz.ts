@@ -41,24 +41,28 @@ export const seedQuizz = async () => {
 
     console.log('Seeding questions...');
     const questions = await axiosClient.get('/quizz/questions');
+    const seededQuizzs = await axiosClient.get('/quizz');
     if (questions.data.length > 0) {
         console.error('Questions already seeded');
         return;
     }
 
-    for (let i = 0; i < 10; i++) {
-        const questionData: CreateQuestionDto = {
-            quizzId: i + 1,
-            options: [],
-            question: faker.lorem.sentence() + '?',
-            explanation: faker.lorem.paragraph(),
-            type: faker.helpers.arrayElement(['multiple', 'boolean']) as QuestionTypesEnum,
-        };
-        try {
-            const response = await axiosClient.post('/quizz/questions', questionData);
-            console.log(`Question created: ${response.data.question + '?'}`);
-        } catch (error) {
-            console.error('Error creating question:', JSON.stringify(error, null, 2));
+    for (const q of seededQuizzs.data) {
+        const quizzId = q.id;
+        for (let i = 0; i < 10; i++) {
+            const questionData: CreateQuestionDto = {
+                quizzId: quizzId,
+                options: [],
+                question: faker.lorem.sentence(),
+                explanation: faker.lorem.paragraph(),
+                type: faker.helpers.arrayElement(['multiple', 'boolean']) as QuestionTypesEnum,
+            };
+            try {
+                const response = await axiosClient.post('/quizz/questions', questionData);
+                console.log(`Question created: ${response.data.question + '?'}`);
+            } catch (error) {
+                console.error('Error creating question:', JSON.stringify(error, null, 2));
+            }
         }
     }
 

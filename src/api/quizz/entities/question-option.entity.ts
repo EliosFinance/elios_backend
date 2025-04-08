@@ -14,7 +14,7 @@ export class QuestionOption {
 
     @ApiProperty({ description: 'Is this the correct answer ?' })
     @Column()
-    isCorrect: string;
+    isCorrect: boolean;
 
     @ManyToOne(
         () => Question,
