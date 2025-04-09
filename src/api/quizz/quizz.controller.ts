@@ -27,8 +27,6 @@ export class QuizzController {
 
     @Get('questions')
     findAllQuestions() {
-        console.log('aaaaaa');
-
         return this.quizzService.findAllQuestions();
     }
 
