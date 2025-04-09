@@ -37,7 +37,6 @@ export class UsersService {
 
             try {
                 const savedUser = await this.userRepository.save(user);
-
                 const notifications = new UserNotifications();
                 notifications.user = savedUser;
                 await this.notificationsRepository.save(notifications);
