@@ -1,10 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '@src/api/users/entities/user.entity';
 import { Article } from 'src/api/articles/entities/article.entity';
 import { Challenge } from 'src/api/challenges/entities/challenge.entity';
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { QuizzUserLightType } from '../dto/user-light.dto';
 import { Question } from './question.entity';
+import { QuizzFinisher } from './quizz-finisher';
 
 export enum QuizzDifficultyEnum {
     EASY = 'easy',
@@ -75,11 +74,22 @@ export class Quizz {
     challenge: Challenge;
 
     @ApiProperty({ description: 'List of finishers of the quiz' })
-    // relation with the user
-    @ManyToMany(
-        () => User,
-        (user) => user.id,
+    @OneToMany(
+        () => QuizzFinisher,
+        (finisher) => finisher.quizz,
+        { cascade: true },
     )
-    @JoinTable()
-    finishers: QuizzUserLightType[];
+    finishers: QuizzFinisher[];
+
+    toDto() {
+        return {
+            ...this,
+            finishers: this.finishers?.map((finisher) => ({
+                id: finisher.user.id,
+                username: finisher.user.username,
+                email: finisher.user.email,
+                lastScore: finisher.lastScore,
+            })),
+        };
+    }
 }

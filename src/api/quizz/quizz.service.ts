@@ -10,6 +10,7 @@ import { UpdateQuizzDto } from './dto/quizz/update-quizz.dto';
 import { QuizzUserLightType } from './dto/user-light.dto';
 import { QuestionOption } from './entities/question-option.entity';
 import { Question } from './entities/question.entity';
+import { QuizzFinisher } from './entities/quizz-finisher';
 import { QuestionTypesEnum, Quizz } from './entities/quizz.entity';
 
 @Injectable()
@@ -23,6 +24,8 @@ export class QuizzService {
         private readonly questionOptionRepository: Repository<QuestionOption>,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        @InjectRepository(QuizzFinisher)
+        private readonly quizzFinisherRepository: Repository<QuizzFinisher>,
     ) {}
 
     private async getOrThrow<T>(repo: Repository<T>, id: number, name = 'Entity'): Promise<T> {
@@ -46,20 +49,31 @@ export class QuizzService {
     }
 
     async findAll() {
-        return this.quizzRepository.find({ relations: ['challenge', 'relatedArticles', 'questions', 'finishers'] });
+        const quizzes = await this.quizzRepository.find({
+            relations: ['challenge', 'relatedArticles', 'questions', 'finishers', 'finishers.user'],
+        });
+
+        return quizzes.map((q) => q.toDto());
     }
 
     async findOne(id: number) {
-        // return the quizz with the given id, including its challenge, related articles, and questions, and the questions options
         const quizz = await this.quizzRepository.findOne({
             where: { id },
-            relations: ['challenge', 'relatedArticles', 'questions', 'questions.options', 'finishers'],
+            relations: [
+                'challenge',
+                'relatedArticles',
+                'questions',
+                'questions.options',
+                'finishers',
+                'finishers.user',
+            ],
         });
+
         if (!quizz) {
             throw new NotFoundException(`Quizz with ID ${id} not found`);
         }
 
-        return quizz;
+        return quizz.toDto();
     }
 
     async update(id: number, updateQuizzDto: UpdateQuizzDto) {
@@ -69,41 +83,42 @@ export class QuizzService {
         return this.quizzRepository.save(quizz);
     }
 
-    async completeQuizz(id: number, userId: number, score: number) {
-        const quizz = await this.getOrThrow(this.quizzRepository, id, 'Quizz');
-        if (score > quizz.questions.length) {
-            throw new BadRequestException(
-                `Score ${score} is greater than the number of questions ${quizz.questions.length}`,
-            );
-        }
-        const user = await this.getOrThrow(this.userRepository, userId, 'User');
-        const finishers = quizz.finishers || [];
-        const userLight: QuizzUserLightType = {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            lastScore: score,
-        };
-
-        // check if the user is already in the finishers list
-        const userIndex = finishers.findIndex((finisher) => finisher.id === userLight.id);
-        if (userIndex !== -1) {
-            finishers[userIndex].lastScore = score;
-        } else {
-            finishers.push(userLight);
-        }
-        quizz.finishers = finishers;
-
-        await this.quizzRepository.update(id, quizz);
-        const updatedQuizz = await this.quizzRepository.findOne({
-            where: { id },
-            relations: ['challenge', 'relatedArticles', 'questions', 'questions.options', 'finishers'],
+    async completeQuizz(quizzId: number, userId: number, score: number): Promise<QuizzFinisher> {
+        const quizz = await this.quizzRepository.findOne({
+            where: { id: quizzId },
         });
-        if (!updatedQuizz) {
-            throw new NotFoundException(`Quizz with ID ${id} not found`);
+
+        if (!quizz) {
+            throw new NotFoundException(`Quizz with ID ${quizzId} not found`);
         }
 
-        return updatedQuizz;
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            throw new NotFoundException(`User with ID ${userId} not found`);
+        }
+
+        // Check if the user has already completed this quizz
+        let finisher = await this.quizzFinisherRepository.findOne({
+            where: {
+                user: { id: userId },
+                quizz: { id: quizzId },
+            },
+        });
+
+        if (finisher) {
+            finisher.lastScore = score;
+        } else {
+            finisher = this.quizzFinisherRepository.create({
+                user,
+                quizz,
+                lastScore: score,
+            });
+        }
+
+        return await this.quizzFinisherRepository.save(finisher);
     }
 
     async remove(id: number) {
