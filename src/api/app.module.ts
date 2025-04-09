@@ -9,12 +9,9 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import dataSource from '@src/api/data-source';
 import { RequestLogsModule } from '@src/api/request-logs/request-logs.module';
 import { MiddlewareModule } from '@src/middlewares/middleware.module';
 import { RequestLoggerMiddleware } from '@src/middlewares/request-logger.middleware';
-import { ChallengeQueueEventsListener } from '@src/workers/challenge.queue.events';
-import { ChallengeProcessor } from '@src/workers/challenge.worker';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { LoggingInterceptor } from '../logging.interceptor';
 import { AppController } from './app.controller';
@@ -28,19 +25,6 @@ console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
 console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
 console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
 
-// // log the connexion with the database
-// console.warn('DB_STATUS', {
-//     type: 'postgres',
-//     host: String(process.env.POSTGRES_HOST),
-//     port: parseInt(process.env.POSTGRES_PORT, 10),
-//     username: String(process.env.POSTGRES_USER),
-//     password: String(process.env.POSTGRES_PASSWORD),
-//     database: String(process.env.POSTGRES_DB),
-//     entities: ['**/entity/*.entity.ts'],
-//     synchronize: true,
-//     autoLoadEntities: true,
-//     logging: false,
-// });
 @Module({
     imports: [
         // TypeOrmModule.forRoot(dataSource.options),
