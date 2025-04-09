@@ -8,7 +8,6 @@ import { PowensModule } from './powens/powens.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
-import { BullModule } from '@nestjs/bullmq';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import dataSource from '@src/api/data-source';
 import { RequestLogsModule } from '@src/api/request-logs/request-logs.module';
@@ -21,6 +20,7 @@ import { LoggingInterceptor } from '../logging.interceptor';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
+import { QuizzModule } from './quizz/quizz.module';
 
 console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
 console.warn('POSTGRES_PORT', process.env.POSTGRES_PORT);
@@ -62,6 +62,7 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
         TransactionsModule,
         EnterprisesModule,
         ChallengesModule,
+        QuizzModule,
         ArticlesModule,
         ContentTypeModule,
         RequestLogsModule,
