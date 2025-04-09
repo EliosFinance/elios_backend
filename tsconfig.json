@@ -10,7 +10,7 @@
         "sourceMap": true,
         "outDir": "./dist",
         "baseUrl": "./",
-        "incremental": true,
+        // "incremental": true,
         "skipLibCheck": true,
         "strictNullChecks": false,
         "noImplicitAny": false,
@@ -33,11 +33,7 @@
         "transpileOnly": false,
         "files": true,
         "require": ["tsconfig-paths/register"],
-        "compilerOptions": {
-            // compilerOptions specified here will override those declared below,
-            // but *only* in ts-node.  Useful if you want ts-node and tsc to use
-            // different options with a single tsconfig.json.
-        },
+        "compilerOptions": {},
         "include": ["src/**/*", "src/fill-pgsql-database"],
         "exclude": ["./node_modules", "./lib", "./dist"]
     }
