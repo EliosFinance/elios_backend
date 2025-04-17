@@ -2104,6 +2104,13 @@
   dependencies:
     undici-types "~6.21.0"
 
+"@types/node@>=8.1.0":
+  version "22.14.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-22.14.1.tgz#53b54585cec81c21eee3697521e31312d6ca1e6f"
+  integrity sha512-u0HuPQwe/dHrItgHHpmw3N2fYCR6x4ivMNbPHRkBVP4CvN+kiRrKHWk3i8tXiO/joPwXLMYvF9TTF0eqgHIuOw==
+  dependencies:
+    undici-types "~6.21.0"
+
 "@types/node@^20.3.1":
   version "20.17.30"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-20.17.30.tgz#1d93f656d3b869dbef7b796568ac457606ba58d0"
@@ -3673,7 +3680,7 @@ electron-to-chromium@^1.5.73:
     class-validator "^0.14.1"
     commitizen "^4.3.0"
     dotenv "^16.4.7"
-    elios_backend "file:../../../Library/Caches/Yarn/v6/npm-elios-backend-0.0.1-eebbac7c-8f8c-4f13-b1c2-2bf5804e3e4e-1744111766675/node_modules/elios_backend"
+    elios_backend "file:../../../../AppData/Local/Yarn/Cache/v6/npm-elios-backend-0.0.1-e2280525-709a-4792-b5e5-5ad3478b39fb-1744884457810/node_modules/elios_backend"
     google-auth-library "^9.15.1"
     ioredis "^5.6.0"
     passport "^0.7.0"
@@ -7185,6 +7192,14 @@ strip-json-comments@3.1.1, strip-json-comments@^3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-3.1.1.tgz#31f1281b3832630434831c310c01cccda8cbe006"
   integrity sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==
+
+stripe@^18.0.0:
+  version "18.0.0"
+  resolved "https://registry.yarnpkg.com/stripe/-/stripe-18.0.0.tgz#1efc7a102b3b4fb5146a68b46299b0cae2d35470"
+  integrity sha512-3Fs33IzKUby//9kCkCa1uRpinAoTvj6rJgQ2jrBEysoxEvfsclvXdna1amyEYbA2EKkjynuB4+L/kleCCaWTpA==
+  dependencies:
+    "@types/node" ">=8.1.0"
+    qs "^6.11.0"
 
 superagent@^9.0.1:
   version "9.0.2"
