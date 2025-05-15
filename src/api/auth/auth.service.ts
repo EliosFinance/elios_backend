@@ -197,4 +197,9 @@ export class AuthService {
             throw new UnauthorizedException('Invalid access token');
         }
     }
+
+    async invalidateUserTokens(userId: number): Promise<void> {
+        await this.refreshTokenIdsStorage.invalidate(userId);
+        this.logger.log(`All tokens invalidated for user ${userId}`);
+    }
 }

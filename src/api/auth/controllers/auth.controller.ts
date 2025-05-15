@@ -1,14 +1,14 @@
 import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { RegisterUserDto } from '../users/dto/register-user.dto';
-import { UsersService } from '../users/users.service';
-import { AuthService } from './auth.service';
-import { Public } from './decorator/public.decorator';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { SignInDto } from './dto/sign-in.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { JwtRefreshTokenGuard } from './guards/jwt-refresh-token.guard';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { AuthService } from '@src/api/auth/auth.service';
+import { Public } from '@src/api/auth/decorator/public.decorator';
+import { RefreshTokenDto } from '@src/api/auth/dto/refresh-token.dto';
+import { SignInDto } from '@src/api/auth/dto/sign-in.dto';
+import { JwtAuthGuard } from '@src/api/auth/guards/jwt-auth.guard';
+import { JwtRefreshTokenGuard } from '@src/api/auth/guards/jwt-refresh-token.guard';
+import { LocalAuthGuard } from '@src/api/auth/guards/local-auth.guard';
+import { RegisterUserDto } from '@src/api/users/dto/register-user.dto';
+import { UsersService } from '@src/api/users/users.service';
 
 @Controller('auth')
 @ApiTags('Auth')

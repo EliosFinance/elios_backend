@@ -1,4 +1,3 @@
-import { User } from '@src/api/users/entities/user.entity';
 import {
     Column,
     CreateDateColumn,
@@ -8,6 +7,7 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
 @Entity()
 export class PinAuth {
@@ -35,6 +35,9 @@ export class PinAuth {
 
     @Column({ default: 6 })
     pinLength: number;
+
+    @Column({ nullable: true })
+    lastVerifiedAt: Date;
 
     @CreateDateColumn()
     createdAt: Date;
