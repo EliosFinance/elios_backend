@@ -99,7 +99,7 @@ export class PinAuthService {
                 }
 
                 throw new UnauthorizedException(
-                    'Too many failed attemps. PIN is locked and tokens have been invalidated',
+                    'Too many failed attempts. PIN is locked and tokens have been invalidated',
                 );
             }
 
