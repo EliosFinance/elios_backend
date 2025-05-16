@@ -23,8 +23,6 @@ export class PinAuthController {
     @ApiResponse({ status: 400, description: 'Invalid PIN format or length' })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     async setupPin(@UserFromRequest() user: User, @Body() setupPinDto: SetupPinDto) {
-        this.logger.debug(`User: ${JSON.stringify({ id: user.id, email: user.email })}`);
-        this.logger.debug(`SetupPinDto: ${JSON.stringify(setupPinDto)}`);
         return this.pinAuthService.setupPin(user.id, setupPinDto);
     }
 
