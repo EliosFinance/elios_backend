@@ -1,4 +1,12 @@
-import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+    BadRequestException,
+    Inject,
+    Injectable,
+    Logger,
+    NotFoundException,
+    UnauthorizedException,
+    forwardRef,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from '@src/api/auth/auth.service';
@@ -18,7 +26,7 @@ export class PinAuthService {
     constructor(
         @InjectRepository(PinAuth) private pinAuthRepository: Repository<PinAuth>,
         @InjectRepository(User) private userRepository: Repository<User>,
-        private authService: AuthService,
+        @Inject(forwardRef(() => AuthService)) private authService: AuthService,
         private appSessionService: AppSessionService,
         private configService: ConfigService,
     ) {

@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
@@ -9,6 +9,7 @@ import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
+import { PinAuthService } from './services/pin-auth.service';
 import { JwtRefreshTokenStrategy } from './strategy/jwt-refresh-token.strategy';
 
 @Injectable()
@@ -19,6 +20,7 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
+        @Inject(forwardRef(() => PinAuthService)) private readonly pinAuthService: PinAuthService,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
     ) {
@@ -41,6 +43,13 @@ export class AuthService {
 
         if (!passwordIsValid) {
             throw new UnauthorizedException('Invalid username or password');
+        }
+
+        // Vérifier si le PIN est configuré avant d'essayer de le débloquer
+        const isPinSetup = await this.pinAuthService.isPinSetup(user.id);
+        if (isPinSetup) {
+            // Débloquer le PIN lors de la connexion seulement s'il est configuré
+            await this.pinAuthService.unlockPin(user.id);
         }
 
         if (!user.powens_token) {

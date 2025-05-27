@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -32,12 +32,12 @@ import { PinAuthService } from '@src/api/auth/services/pin-auth.service';
     controllers: [AuthController, PinAuthController, AppSessionController],
     providers: [
         AuthService,
+        PinAuthService,
         JwtStrategy,
         UsersService,
         RefreshTokenIdsStorage,
         LocalStrategy,
         JwtRefreshTokenStrategy,
-        PinAuthService,
         AppSessionService,
         ConfigService,
     ],
