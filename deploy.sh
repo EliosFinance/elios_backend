@@ -8,7 +8,7 @@ EC2_IP="51.44.42.106"
 DOMAIN="prod.api.elios.finance"
 EMAIL="admin@elios.finance"
 KEY_PATH="./elios-keypair.pem"
-REPO_URL="https://github.com/EliosFinance/elios_backend.git"
+REPO_URL="git@github.com:EliosFinance/elios_backend.git"
 
 
 # Couleurs
@@ -76,29 +76,29 @@ main() {
 
     # Cloner le repository
     log_info "Clonage du repository Elios..."
-    run_remote "rm -rf elios && git clone $REPO_URL elios"
-    run_remote "cd elios && git checkout main"
+    run_remote "rm -rf elios_backend && git clone $REPO_URL"
+    run_remote "cd elios_backend && git checkout main"
 
     # Copier les fichiers de configuration
     log_info "Copie des fichiers de configuration..."
-    copy_to_ec2 "docker-compose.production.yml" "elios/"
-    copy_to_ec2 "Dockerfile.production" "elios/"
-    copy_to_ec2 "Dockerfile.worker" "elios/"
-    copy_to_ec2 ".env.production" "elios/.env"
-    copy_to_ec2 "src/api/app.module.ts" "elios/src/api/"
+    copy_to_ec2 "docker-compose.production.yml" "elios_backend/"
+    copy_to_ec2 "Dockerfile.production" "elios_backend/"
+    copy_to_ec2 "Dockerfile.worker" "elios_backend/"
+    copy_to_ec2 ".env.production" "elios_backend/.env"
+    copy_to_ec2 "src/api/app.module.ts" "elios_backend/src/api/"
     copy_to_ec2 "elios.conf" "/tmp/"
 
     # Configuration Nginx
     log_info "Configuration de Nginx..."
     run_remote "sudo yum install -y nginx"
-    run_remote "sudo mv /tmp/nginx-elios.conf /etc/nginx/conf.d/elios.conf"
+    run_remote "sudo mv /tmp/elios.conf /etc/nginx/conf.d/elios.conf"
     run_remote "sudo mkdir -p /var/www/html"
     run_remote "sudo systemctl start nginx"
     run_remote "sudo systemctl enable nginx"
 
     # Démarrage des containers
     log_info "Démarrage des containers Docker..."
-    run_remote "cd elios && sudo docker-compose -f docker-compose.production.yml up -d --build"
+    run_remote "cd elios_backend && sudo docker-compose -f docker-compose.production.yml up -d --build"
 
     # Configuration SSL
     log_info "Configuration SSL avec Let's Encrypt..."
