@@ -1,0 +1,104 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile.production
+    container_name: elios_api
+    ports:
+      - "3333:3333"
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=elios_user
+      - POSTGRES_PASSWORD=elios_secure_password_2024
+      - POSTGRES_DB=elios_db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - elios_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3333/api/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.worker
+    container_name: elios_worker
+    environment:
+      - NODE_ENV=production
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=elios_user
+      - POSTGRES_PASSWORD=elios_secure_password_2024
+      - POSTGRES_DB=elios_db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - elios_network
+    healthcheck:
+      test: [ "CMD", "pgrep", "-f", "main-worker" ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: elios_postgres
+    environment:
+      - POSTGRES_USER=elios_user
+      - POSTGRES_PASSWORD=elios_secure_password_2024
+      - POSTGRES_DB=elios_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - elios_network
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U elios_user -d elios_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: elios_redis
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - elios_network
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  elios_network:
+    driver: bridge

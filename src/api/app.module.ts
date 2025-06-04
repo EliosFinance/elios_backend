@@ -19,11 +19,13 @@ import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
 import { QuizzModule } from './quizz/quizz.module';
 
-console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
-console.warn('POSTGRES_PORT', process.env.POSTGRES_PORT);
-console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
-console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
-console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
+if (process.env.NODE_ENV !== 'production') {
+    console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
+    console.warn('POSTGRES_PORT', process.env.POSTGRES_PORT);
+    console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
+    console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
+    console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
+}
 
 @Module({
     imports: [
@@ -36,9 +38,17 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
             password: String(process.env.POSTGRES_PASSWORD),
             database: String(process.env.POSTGRES_DB),
             entities: ['**/entity/*.entity.ts'],
-            synchronize: true,
+            synchronize: process.env.NODE_ENV !== 'production',
             autoLoadEntities: true,
-            logging: false,
+            logging: process.env.NODE_ENV !== 'production',
+            migrationsRun: process.env.NODE_ENV === 'production',
+            migrations: ['dist/migrations/*.js'],
+            extra: {
+                max: 20,
+                min: 5,
+                idleTimeoutMillis: 30000,
+                connectionTimeoutMillis: 2000,
+            },
         }),
         PowensModule,
         AuthModule,
