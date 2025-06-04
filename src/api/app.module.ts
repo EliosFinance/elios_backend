@@ -38,11 +38,15 @@ if (process.env.NODE_ENV !== 'production') {
             password: String(process.env.POSTGRES_PASSWORD),
             database: String(process.env.POSTGRES_DB),
             entities: ['**/entity/*.entity.ts'],
-            synchronize: process.env.NODE_ENV !== 'production',
+            // Transition en douceur : synchronize activé pour le premier déploiement
+            synchronize: process.env.FORCE_SYNC === 'true' || process.env.NODE_ENV !== 'production',
             autoLoadEntities: true,
+            // Logging désactivé en production pour les performances
             logging: process.env.NODE_ENV !== 'production',
-            migrationsRun: process.env.NODE_ENV === 'production',
+            // Migrations désactivées pour le premier déploiement, à activer plus tard
+            migrationsRun: process.env.RUN_MIGRATIONS === 'true',
             migrations: ['dist/migrations/*.js'],
+            // Pool de connexions optimisé
             extra: {
                 max: 20,
                 min: 5,

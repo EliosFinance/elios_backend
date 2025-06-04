@@ -39,10 +39,10 @@ services:
     environment:
       - NODE_ENV=production
       - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=elios_user
-      - POSTGRES_PASSWORD=elios_secure_password_2024
-      - POSTGRES_DB=elios_db
+      - POSTGRES_PORT=5444
+      - POSTGRES_USER=elios_db
+      - POSTGRES_PASSWORD=eliosbackendpassword
+      - POSTGRES_DB=elios
       - REDIS_URL=redis://redis:6379
     depends_on:
       postgres:
@@ -71,7 +71,7 @@ services:
     networks:
       - elios_network
     ports:
-      - "127.0.0.1:5432:5432"
+      - '5444:5432'
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U elios_user -d elios_db" ]
       interval: 10s
