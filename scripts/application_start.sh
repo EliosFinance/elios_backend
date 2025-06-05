@@ -7,25 +7,48 @@ cd /home/ec2-user/elios || exit 1
 if ! systemctl is-active --quiet docker; then
     echo "Docker is not running, attempting to start..."
     sudo systemctl start docker || true
+    sudo systemctl start docker || true
+fi
+
+# Create a basic docker-compose.yml if it doesn't exist
+if [ ! -f "docker-compose.prod.yml" ]; then
+    echo "Creating basic docker-compose.yml..."
+    cat > docker-compose.prod.yml << 'EOF'
+version: '3.9'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '3333:3333'
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./dist:/app/dist
+    networks:
+      - elios_network
+
+networks:
+  elios_network:
+    driver: bridge
+EOF
 fi
 
 # Check if docker-compose exists and is executable
 if command -v docker-compose &> /dev/null; then
     echo "Starting containers with docker-compose..."
     docker-compose up -d || echo "Warning: docker-compose up failed"
+elif [ -f "/usr/local/bin/docker-compose" ]; then
+    echo "Starting containers with /usr/local/bin/docker-compose..."
+    /usr/local/bin/docker-compose up -d || echo "Warning: docker-compose up failed"
 else
-    echo "Docker Compose not found, checking alternative location..."
-    if [ -f "/usr/local/bin/docker-compose" ]; then
-        echo "Starting containers with /usr/local/bin/docker-compose..."
-        /usr/local/bin/docker-compose up -d || echo "Warning: docker-compose up failed"
-    else
-        echo "ERROR: Docker Compose not found"
-        exit 1
-    fi
+    echo "WARNING: Docker Compose not found, skipping container startup"
 fi
 
 # Configure Nginx
-if [ ! -f /etc/nginx/conf.d/elios.conf ] && [ -f "deploy/nginx/elios.conf" ]; then
+if [ -f "deploy/nginx/elios.conf" ]; then
     echo "Configuring Nginx..."
     sudo cp deploy/nginx/elios.conf /etc/nginx/conf.d/ || echo "Warning: Failed to copy Nginx config"
 
@@ -37,7 +60,7 @@ if [ ! -f /etc/nginx/conf.d/elios.conf ] && [ -f "deploy/nginx/elios.conf" ]; th
         echo "Warning: Nginx not found"
     fi
 else
-    echo "Nginx already configured or config file not found"
+    echo "Nginx config file not found"
 fi
 
 echo "Application start script completed"
