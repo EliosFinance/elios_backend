@@ -1,7 +1,7 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { ChallengesService } from '@src/api/challenges/challenges.service';
-import { CHALLENGE_QUEUE_NAME, ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/ChallengeStepsTypes';
+import { CHALLENGE_QUEUE_NAME, ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/challengeStepsTypes';
 import { Job } from 'bullmq';
 import { createActor, createMachine } from 'xstate';
 

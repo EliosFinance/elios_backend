@@ -1,7 +1,7 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CHALLENGE_QUEUE_NAME } from '@src/types/ChallengeStepsTypes';
+import { CHALLENGE_QUEUE_NAME } from '@src/types/challengeStepsTypes';
 import { ChallengeQueueEventsListener } from '@src/workers/challenge.queue.events';
 import { Enterprise } from '../enterprises/entities/enterprise.entity';
 import { User } from '../users/entities/user.entity';

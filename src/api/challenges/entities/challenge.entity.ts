@@ -1,4 +1,4 @@
-import { ChallengeStateMachineConfigType } from '@src/types/ChallengeStepsTypes';
+import { ChallengeStateMachineConfigType } from '@src/types/challengeStepsTypes';
 import {
     Column,
     CreateDateColumn,
