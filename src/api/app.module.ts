@@ -38,21 +38,9 @@ if (process.env.NODE_ENV !== 'production') {
             password: String(process.env.POSTGRES_PASSWORD),
             database: String(process.env.POSTGRES_DB),
             entities: ['**/entity/*.entity.ts'],
-            // Transition en douceur : synchronize activé pour le premier déploiement
-            synchronize: process.env.FORCE_SYNC === 'true' || process.env.NODE_ENV !== 'production',
+            synchronize: true,
             autoLoadEntities: true,
-            // Logging désactivé en production pour les performances
-            logging: process.env.NODE_ENV !== 'production',
-            // Migrations désactivées pour le premier déploiement, à activer plus tard
-            migrationsRun: process.env.RUN_MIGRATIONS === 'true',
-            migrations: ['dist/migrations/*.js'],
-            // Pool de connexions optimisé
-            extra: {
-                max: 20,
-                min: 5,
-                idleTimeoutMillis: 30000,
-                connectionTimeoutMillis: 2000,
-            },
+            logging: false,
         }),
         PowensModule,
         AuthModule,

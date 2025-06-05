@@ -26,13 +26,7 @@
         "commit": "cz",
         "genDocu": "npx @compodoc/compodoc -p ./tsconfig.json -n 'Elios backend documentation'",
         "serveDocu": "npx @compodoc/compodoc -s",
-        "seed": "ts-node ./src/seed/main",
-        "migration:generate": "typeorm migration:generate -d dist/src/data-source.js",
-        "migration:run": "typeorm migration:run -d dist/src/data-source.js",
-        "migration:revert": "typeorm migration:revert -d dist/src/data-source.js",
-        "migration:show": "typeorm migration:show -d dist/src/data-source.js",
-        "schema:sync": "typeorm schema:sync -d dist/src/data-source.js",
-        "schema:drop": "typeorm schema:drop -d dist/src/data-source.js"
+        "seed": "ts-node ./src/seed/main"
     },
     "dependencies": {
         "@commitlint/cli": "^19.5.0",
