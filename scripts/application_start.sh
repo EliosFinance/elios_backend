@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x  # Print commands and their arguments as they are executed
 
-cd /home/ec2-user/elios || exit 1
+cd /home/ec2-user/elios_backend || exit 1
 
 # Ensure docker is running
 if ! systemctl is-active --quiet docker; then

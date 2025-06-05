@@ -2,14 +2,14 @@
 set -x  # Print commands and their arguments as they are executed
 
 # Check if the destination directory exists
-if [ ! -d "/home/ec2-user/elios" ]; then
+if [ ! -d "/home/ec2-user/elios_backend" ]; then
     echo "Creating destination directory..."
-    mkdir -p /home/ec2-user/elios
+    mkdir -p /home/ec2-user/elios_backend
     # Set proper ownership
-    chown ec2-user:ec2-user /home/ec2-user/elios
+    chown ec2-user:ec2-user /home/ec2-user/elios_backend
 fi
 
-cd /home/ec2-user/elios || exit 0  # Exit gracefully if we can't cd
+cd /home/ec2-user/elios_backend || exit 0  # Exit gracefully if we can't cd
 
 # Check if docker and docker-compose are installed
 echo "Checking Docker installation..."
@@ -39,7 +39,7 @@ fi
 
 # Clean directory (preserve .env files) - but don't fail if this doesn't work
 echo "Cleaning directory..."
-find /home/ec2-user/elios -mindepth 1 -not -name "*.env" -delete || true
+find /home/ec2-user/elios_backend -mindepth 1 -not -name "*.env" -delete || true
 
 echo "Before install script completed successfully"
 exit 0  # Ensure we exit with success

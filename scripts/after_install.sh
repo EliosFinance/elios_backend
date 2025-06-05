@@ -2,7 +2,7 @@
 set -x  # Print commands and their arguments as they are executed
 
 # Fix the directory path
-cd /home/ec2-user/elios || exit 1
+cd /home/ec2-user/elios_backend || exit 1
 
 # Check if yarn is installed, if not install it directly
 if ! command -v yarn &> /dev/null; then
