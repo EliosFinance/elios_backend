@@ -39,10 +39,10 @@ fi
 # Check if docker-compose exists and is executable
 if command -v docker-compose &> /dev/null; then
     echo "Starting containers with docker-compose..."
-    docker-compose up -d || echo "Warning: docker-compose up failed"
+    docker-compose -f docker-compose.prod.yml up -d || echo "Warning: docker-compose up failed"
 elif [ -f "/usr/local/bin/docker-compose" ]; then
     echo "Starting containers with /usr/local/bin/docker-compose..."
-    /usr/local/bin/docker-compose up -d || echo "Warning: docker-compose up failed"
+    /usr/local/bin/docker-compose -f docker-compose.prod.yml up -d || echo "Warning: docker-compose up failed"
 else
     echo "WARNING: Docker Compose not found, skipping container startup"
 fi
