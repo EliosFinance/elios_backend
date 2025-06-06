@@ -44,10 +44,10 @@ export class PowensController {
         const { code, userId } = query;
         try {
             const response = await lastValueFrom(
-                this.httpService.post('https://lperrenot-sandbox.biapi.pro/2.0/auth/token/access', {
+                this.httpService.post(`${process.env.POWENS_CLIENT_URL}auth/token/access`, {
                     code,
-                    client_id: '70395459',
-                    client_secret: 'j7IX1ETJ4zyRUt8XucEaSSsuEz/oYhCK',
+                    client_id: process.env.POWENS_CLIENT_ID,
+                    client_secret: process.env.POWENS_CLIENT_SECRET,
                 }),
             );
 
@@ -96,7 +96,7 @@ export class PowensController {
         const connection_id_parameter = connection_id ? `&connection_id=${connection_id}` : '';
         const connector_uuids_parameter = connectorUuids ? `&connector_uuids=${connectorUuids}` : '';
 
-        const url = `https://webview.powens.com/fr/connect?state=refreshBanks?&client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro${connector_uuids_parameter}${connection_id_parameter}&code=${user.powens_token}`;
+        const url = `https://webview.powens.com/fr/connect?state=refreshBanks?&client_id=${process.env.POWENS_CLIENT_ID}&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro${connector_uuids_parameter}${connection_id_parameter}&code=${user.powens_token}`;
         return {
             url,
         };
@@ -118,7 +118,7 @@ export class PowensController {
 
         const connection_id_parameter = connection_id ? `&connection_id=${connection_id}` : '';
 
-        const url = `https://webview.powens.com/fr/reconnect?client_id=70395459&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro${connection_id_parameter}&code=${user.powens_token}`;
+        const url = `https://webview.powens.com/fr/reconnect?client_id=${process.env.POWENS_CLIENT_ID}&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro${connection_id_parameter}&code=${user.powens_token}`;
         return {
             url,
         };
@@ -175,7 +175,7 @@ export class PowensController {
 
         const response = await lastValueFrom(
             this.httpService.get(
-                'https://lperrenot-sandbox.biapi.pro/2.0/users/me/connections?expand=connector,accounts,subscriptions',
+                `${process.env.POWENS_CLIENT_URL}users/me/connections?expand=connector,accounts,subscriptions`,
                 {
                     headers: {
                         Authorization: `Bearer ${user.powens_token}`,
@@ -197,7 +197,7 @@ export class PowensController {
         }
 
         const response = await axios.delete(
-            `https://lperrenot-sandbox.biapi.pro/2.0/users/me/connections/${connectionId}`,
+            `${process.env.POWENS_CLIENT_URL}users/me/connections/${connectionId}`,
             {
                 headers: {
                     Authorization: `Bearer ${user.powens_token}`,

@@ -21,12 +21,12 @@ export class UsersService {
         const hashedPassword = await bcrypt.hashSync(password, 10);
 
         const payload = {
-            client_id: '70395459',
-            client_secret: 'j7IX1ETJ4zyRUt8XucEaSSsuEz/oYhCK',
+            client_id: process.env.POWENS_CLIENT_ID,
+            client_secret: process.env.POWENS_CLIENT_SECRET,
         };
 
         try {
-            const response = await axios.post('https://lperrenot-sandbox.biapi.pro/2.0/auth/init', payload);
+            const response = await axios.post(`${process.env.POWENS_CLIENT_URL}auth/init`, payload);
             const { auth_token, id_user } = response.data;
             const user = new User();
             user.username = username;

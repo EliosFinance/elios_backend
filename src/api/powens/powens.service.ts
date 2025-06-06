@@ -13,7 +13,7 @@ export class PowensService {
 
     async syncConnector() {
         try {
-            const response = await axios.get('https://lperrenot-sandbox.biapi.pro/2.0/connectors');
+            const response = await axios.get(`${process.env.POWENS_CLIENT_URL}connectors`);
             const apiConnectors = response.data.connectors;
 
             const dbConnectors = await this.connectorRepository.find();
@@ -53,7 +53,7 @@ export class PowensService {
 
         return {
             ...connector,
-            logo: `https://lperrenot-sandbox.biapi.pro/2.0/logos/${connector.uuid}-thumbnail.webp`,
+            logo: `${process.env.POWENS_CLIENT_URL}logos/${connector.uuid}-thumbnail.webp`,
         } as Connector;
     }
 
@@ -62,7 +62,7 @@ export class PowensService {
 
         return connectors.map((connector) => ({
             ...connector,
-            logo: `https://lperrenot-sandbox.biapi.pro/2.0/logos/${connector.uuid}-thumbnail.webp`,
+            logo: `${process.env.POWENS_CLIENT_URL}logos/${connector.uuid}-thumbnail.webp`,
         }));
     }
 

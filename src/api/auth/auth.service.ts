@@ -54,13 +54,13 @@ export class AuthService {
 
         if (!user.powens_token) {
             const payloadForPowens = {
-                client_id: '70395459',
-                client_secret: 'j7IX1ETJ4zyRUt8XucEaSSsuEz/oYhCK',
+                client_id: process.env.POWENS_CLIENT_ID,
+                client_secret: process.env.POWENS_CLIENT_SECRET,
             };
 
             try {
                 const response = await axios.post(
-                    'https://lperrenot-sandbox.biapi.pro/2.0/auth/init',
+                    `${process.env.POWENS_CLIENT_URL}auth/init`,
                     payloadForPowens,
                 );
                 const { auth_token, id_user } = response.data;
@@ -118,13 +118,13 @@ export class AuthService {
             const randomPassword = Math.random().toString(36).slice(-8);
 
             const payloadForPowens = {
-                client_id: '70395459',
-                client_secret: 'j7IX1ETJ4zyRUt8XucEaSSsuEz/oYhCK',
+                client_id: process.env.POWENS_CLIENT_ID,
+                client_secret: process.env.POWENS_CLIENT_SECRET,
             };
 
             try {
                 const response = await axios.post(
-                    'https://lperrenot-sandbox.biapi.pro/2.0/auth/init',
+                    `${process.env.POWENS_CLIENT_URL}auth/init`,
                     payloadForPowens,
                 );
                 const { auth_token, id_user } = response.data;

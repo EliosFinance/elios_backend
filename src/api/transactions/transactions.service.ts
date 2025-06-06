@@ -17,7 +17,7 @@ export class TransactionsService {
     ) {}
 
     async syncTransactions(userId: number, powensToken: string) {
-        const apiUrl = 'https://lperrenot-sandbox.biapi.pro/2.0/users/me/transactions?limit=1000';
+        const apiUrl = `${process.env.POWENS_CLIENT_URL}users/me/transactions?limit=1000`;
 
         let response = await lastValueFrom(
             this.httpService.get(apiUrl, {
