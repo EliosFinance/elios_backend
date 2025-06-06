@@ -4,7 +4,8 @@ import { axiosClient } from './AxiosClient';
 import 'dotenv/config';
 
 export const seedEnterprises = async () => {
-    const enterprises = await axiosClient.get('/enterprises');
+    // const enterprises = await axiosClient.get('/enterprises');
+    const enterprises = { data: [] };
     if (String(process.env.NODE_ENV) !== 'development') {
         console.error('Seeding is only allowed in development mode');
         return;

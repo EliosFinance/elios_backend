@@ -16,5 +16,10 @@ WORKDIR /app
 
 COPY --from=development /app/node_modules ./node_modules
 COPY --from=development /app/dist ./dist
+<<<<<<< HEAD
 
 CMD ["node", "dist/main"]
+=======
+ 
+CMD ["node", "dist/main"]
+>>>>>>> fix: corrige un bug dans la fonctionnalité d'ajout d'amis

@@ -20,6 +20,9 @@ services:
       - POSTGRES_DB=elios
       - POSTGRES_PASSWORD=eliosbackendpassword
 
+      
+
+
 networks:
   powens_network:
     driver: bridge
