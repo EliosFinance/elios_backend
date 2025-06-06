@@ -78,6 +78,33 @@ export class UsersService {
         return this.userRepository.findOne({
             where: { id },
             relations: ['transactions', 'friends', 'notifications'],
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                transactions: true,
+                friends: true,
+                powens_id: true,
+                powens_token: true,
+                readArticles: true,
+                savedArticles: true,
+                likedArticles: true,
+                update_date: true,
+                creation_date: true,
+                notifications: {
+                    id: true,
+                    budget: true,
+                    accountSync: true,
+                    challenges: true,
+                    emails: true,
+                    expenses: true,
+                    friends: true,
+                    learn: true,
+                    monthlyReport: true,
+                    push: true,
+                    weeklyReport: true,
+                },
+            },
         });
     }
 
