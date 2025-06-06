@@ -86,6 +86,7 @@ export class AuthService {
         await this.refreshTokenIdsStorage.insert(user.id, refreshToken);
 
         return {
+            id: user.id,
             access_token: accessToken,
             refresh_token: refreshToken,
             username: user.username,
@@ -159,6 +160,7 @@ export class AuthService {
         await this.refreshTokenIdsStorage.insert(user.id, refreshToken);
 
         return {
+            id: user.id,
             access_token: accessToken,
             refresh_token: refreshToken,
             username: user.username,
