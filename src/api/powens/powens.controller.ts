@@ -96,7 +96,7 @@ export class PowensController {
         const connection_id_parameter = connection_id ? `&connection_id=${connection_id}` : '';
         const connector_uuids_parameter = connectorUuids ? `&connector_uuids=${connectorUuids}` : '';
 
-        const url = `https://webview.powens.com/fr/connect?state=refreshBanks?&client_id=${process.env.POWENS_CLIENT_ID}&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro${connector_uuids_parameter}${connection_id_parameter}&code=${user.powens_token}`;
+        const url = `https://webview.powens.com/fr/connect?state=refreshBanks?&client_id=${process.env.POWENS_CLIENT_ID}&redirect_uri=${redirectUri}&domain=${process.env.POWENS_CLIENT_DOMAIN}${connector_uuids_parameter}${connection_id_parameter}&code=${user.powens_token}`;
         return {
             url,
         };
@@ -118,7 +118,7 @@ export class PowensController {
 
         const connection_id_parameter = connection_id ? `&connection_id=${connection_id}` : '';
 
-        const url = `https://webview.powens.com/fr/reconnect?client_id=${process.env.POWENS_CLIENT_ID}&redirect_uri=${redirectUri}&domain=lperrenot-sandbox.biapi.pro${connection_id_parameter}&code=${user.powens_token}`;
+        const url = `https://webview.powens.com/fr/reconnect?client_id=${process.env.POWENS_CLIENT_ID}&redirect_uri=${redirectUri}&domain=${process.env.POWENS_CLIENT_DOMAIN}${connection_id_parameter}&code=${user.powens_token}`;
         return {
             url,
         };
