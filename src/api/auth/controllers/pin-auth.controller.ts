@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
 import { User } from '../../users/entities/user.entity';
@@ -32,9 +32,14 @@ export class PinAuthController {
     @ApiOperation({ summary: 'Verify PIN after app reopen' })
     @ApiResponse({ status: 200, description: 'PIN verified successfully' })
     @ApiResponse({ status: 401, description: 'Invalid PIN or locked account' })
-    async verifyPin(@UserFromRequest() user: User, @Body() body: VerifyPinDto & AppStatusDto) {
+    async verifyPin(
+        @UserFromRequest() user: User,
+        @Body() body: VerifyPinDto & AppStatusDto,
+        @Headers('authorization') authorization: string,
+    ) {
         const { pin, deviceId } = body;
-        return this.pinAuthService.verifyPinAfterAppReopen(user.id, deviceId, { pin });
+        const token = authorization.split(' ')[1];
+        return this.pinAuthService.verifyPinAfterAppReopen(user.id, deviceId, { pin }, token);
     }
 
     @Post('reset')
