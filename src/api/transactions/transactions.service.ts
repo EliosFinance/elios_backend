@@ -48,6 +48,7 @@ export class TransactionsService {
     async getUserTransactions(userId: number, order: 'ASC' | 'DESC' = 'DESC'): Promise<Transaction[]> {
         const transactions = await this.transactionsRepository.find({
             where: { user: { id: userId } },
+            relations: ['user'],
             order: {
                 date: order,
             },

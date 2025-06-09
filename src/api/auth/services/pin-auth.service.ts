@@ -8,6 +8,7 @@ import {
     forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthService } from '@src/api/auth/auth.service';
 import { ResetPinDto, SetupPinDto, VerifyPinDto } from '@src/api/auth/dto/pin-auth.dto';
@@ -29,6 +30,7 @@ export class PinAuthService {
         @Inject(forwardRef(() => AuthService)) private authService: AuthService,
         private appSessionService: AppSessionService,
         private configService: ConfigService,
+        private jwtService: JwtService,
     ) {
         this.pinLength = this.configService.get<number>('PIN_LENGTH', 6);
         this.maxAttempts = this.configService.get<number>('PIN_MAX_ATTEMPTS', 3);
@@ -71,7 +73,16 @@ export class PinAuthService {
         userId: number,
         deviceId: string,
         verifyPinDto: VerifyPinDto,
+        token: string,
     ): Promise<{ valid: boolean }> {
+        try {
+            // Vérifier l'expiration du token
+            await this.jwtService.verifyAsync(token);
+        } catch (error) {
+            this.logger.warn(`Token expired or invalid for user ${userId}`);
+            throw new UnauthorizedException('Session expired. Please log in again.');
+        }
+
         const pinAuth = await this.pinAuthRepository.findOne({ where: { userId } });
         if (!pinAuth) {
             throw new NotFoundException('PIN not set up for this user');
