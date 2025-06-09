@@ -59,7 +59,7 @@ export class RecommendationsScheduler {
                             const preferences = await this.userPreferencesService.analyzeUserPreferences(user.id);
                             this.cacheService.setUserPreferences(user.id, preferences, 24 * 60 * 60 * 1000); // 24h
 
-                            const recommendations = await this.aiService.getHybridRecommendations(user.id);
+                            const recommendations = await this.aiService.getHybridRecommendations(user);
                             this.cacheService.setRecommendations(
                                 user.id,
                                 'hybrid_10',

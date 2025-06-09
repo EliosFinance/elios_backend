@@ -228,13 +228,14 @@ export class AIRecommendationsService {
         }
     }
 
-    async getHybridRecommendations(userId: number): Promise<{
+    async getHybridRecommendations(user: User): Promise<{
         articles: Article[];
         challenges: Challenge[];
         scores: any;
         explanation: string;
     }> {
-        const contentBased = await this.userPreferencesService.getPersonalizedRecommendations(userId, 10);
+        const { id: userId } = user;
+        const contentBased = await this.userPreferencesService.getPersonalizedRecommendations(user, 10);
         const collaborative = await this.getCollaborativeRecommendations(userId);
         // const timeBased = await this.getTimeBasedRecommendations(userId);
 
@@ -732,7 +733,7 @@ export class AIRecommendationsService {
             const regex = new RegExp(`${pattern.replace('/', '\\/')}(\\d+)`);
             const match = url.match(regex);
             return match ? parseInt(match[1], 10) : null;
-        } catch (error) {
+        } catch (_error) {
             return null;
         }
     }
