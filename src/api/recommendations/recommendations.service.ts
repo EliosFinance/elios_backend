@@ -1,48 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserPreferencesType } from '@src/types/recommendationsTypes';
 import { UserPreferencesService } from '../users/user-preferences.service';
 
 @Injectable()
 export class RecommendationsService {
+    private readonly logger = new Logger(RecommendationsService.name);
     constructor(private readonly userPreferencesService: UserPreferencesService) {}
 
     generateUserSummary(preferences: UserPreferencesType): string {
-        const topCategory = preferences.favoriteCategories[0];
-        const topContentType = preferences.contentTypes[0];
+        try {
+            const topCategory = preferences.favoriteCategories[0];
+            const topContentType = preferences.contentTypes[0];
 
-        if (!topCategory || !topContentType) {
-            return 'Nous collectons encore des données sur vos préférences. Continuez à explorer notre contenu !';
+            if (!topCategory || !topContentType) {
+                return 'Nous collectons encore des données sur vos préférences. Continuez à explorer notre contenu !';
+            }
+
+            return (
+                `Vous montrez un fort intérêt pour ${topCategory.category.toLowerCase()} ` +
+                `et préférez interagir avec ${topContentType.type}. ` +
+                `Votre niveau de difficulté préféré est ${preferences.difficultyLevel}. ` +
+                `Score d'activité: ${Math.round(preferences.activityScore)}/100.`
+            );
+        } catch (error) {
+            this.logger.warn(`Erreur lors de la génération du résumé: ${error.message}`);
+            return "Profil en cours d'analyse.";
         }
-
-        return (
-            `Vous montrez un fort intérêt pour ${topCategory.category.toLowerCase()} ` +
-            `et préférez interagir avec ${topContentType.type}. ` +
-            `Votre niveau de difficulté préféré est ${preferences.difficultyLevel}. ` +
-            `Score d'activité: ${Math.round(preferences.activityScore)}/100.`
-        );
     }
 
     generateRecommendationText(preferences: UserPreferencesType): string[] {
-        const recommendations = [];
+        try {
+            const recommendations = [];
 
-        if (preferences.activityScore < 30) {
-            recommendations.push(
-                "Essayez de consulter du contenu plus régulièrement pour améliorer votre expérience d'apprentissage.",
-            );
+            if (preferences.activityScore < 30) {
+                recommendations.push(
+                    "Essayez de consulter du contenu plus régulièrement pour améliorer votre expérience d'apprentissage.",
+                );
+            }
+
+            if (preferences.favoriteCategories.length > 0) {
+                const topCategory = preferences.favoriteCategories[0];
+                recommendations.push(
+                    `Basé sur votre intérêt pour ${topCategory.category}, nous vous recommandons d'explorer des sujets connexes.`,
+                );
+            }
+
+            if (preferences.difficultyLevel === 'easy') {
+                recommendations.push('Vous pourriez essayer des contenus de difficulté moyenne pour progresser.');
+            }
+
+            return recommendations;
+        } catch (error) {
+            this.logger.warn(`Erreur lors de la génération des recommandations textuelles: ${error.message}`);
+            return ['Continuez à explorer notre contenu pour recevoir des recommandations personnalisées.'];
         }
-
-        if (preferences.favoriteCategories.length > 0) {
-            const topCategory = preferences.favoriteCategories[0];
-            recommendations.push(
-                `Basé sur votre intérêt pour ${topCategory.category}, nous vous recommandons d'explorer des sujets connexes.`,
-            );
-        }
-
-        if (preferences.difficultyLevel === 'easy') {
-            recommendations.push('Vous pourriez essayer des contenus de difficulté moyenne pour progresser.');
-        }
-
-        return recommendations;
     }
 
     async generateTrends(userId: number): Promise<string[]> {

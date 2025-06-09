@@ -1,11 +1,12 @@
-// src/api/recommendations/recommendations.controller.ts
-import { Controller, Get, HttpException, HttpStatus, Logger, Query, UseGuards } from '@nestjs/common';
+// src/api/recommendations/recommendations.controller.ts - VERSION CORRIGÉE
+
+import { Controller, Get, HttpException, HttpStatus, Logger, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
-import { UserPreferencesType } from '@src/types/recommendationsTypes';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../users/entities/user.entity';
-import { UserPreferencesService } from '../users/user-preferences.service';
+import { UserPreferences, UserPreferencesService } from '../users/user-preferences.service';
+import { RecommendationsService } from './recommendations.service';
 
 @ApiTags('Recommendations')
 @Controller('recommendations')
@@ -14,7 +15,10 @@ import { UserPreferencesService } from '../users/user-preferences.service';
 export class RecommendationsController {
     private readonly logger = new Logger(RecommendationsController.name);
 
-    constructor(private readonly userPreferencesService: UserPreferencesService) {}
+    constructor(
+        private readonly userPreferencesService: UserPreferencesService,
+        private readonly recommendationsService: RecommendationsService,
+    ) {}
 
     @Get('preferences')
     @ApiOperation({ summary: 'Get user preferences analysis' })
@@ -22,7 +26,7 @@ export class RecommendationsController {
         name: 'daysBack',
         required: false,
         type: Number,
-        description: 'Number of days to analyze (default: 30)',
+        description: 'Number of days to analyze (default: 30, max: 365)',
     })
     @ApiResponse({
         status: 200,
@@ -30,19 +34,35 @@ export class RecommendationsController {
     })
     async getUserPreferences(
         @UserFromRequest() user: User,
-        @Query('daysBack') daysBack: number = 30,
-    ): Promise<UserPreferencesType> {
+        @Query('daysBack') daysBackQuery?: string, // Recevoir comme string
+    ): Promise<UserPreferences> {
         try {
+            this.logger.log(`Demande d'analyse des préférences pour l'utilisateur ${user.id}`);
+
+            // Validation de l'utilisateur
             if (!user || !user.id) {
                 throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
             }
 
-            if (daysBack && (daysBack < 1 || daysBack > 365)) {
-                throw new HttpException('Le paramètre daysBack doit être entre 1 et 365', HttpStatus.BAD_REQUEST);
+            // CORRECTION : Conversion et validation sécurisée de daysBack
+            let daysBack = 30; // Valeur par défaut
+            if (daysBackQuery !== undefined) {
+                const parsed = parseInt(daysBackQuery, 10);
+                if (isNaN(parsed) || parsed < 1 || parsed > 365) {
+                    this.logger.warn(
+                        `Paramètre daysBack invalide: ${daysBackQuery}. Utilisation de la valeur par défaut (30).`,
+                    );
+                    daysBack = 30;
+                } else {
+                    daysBack = parsed;
+                }
             }
+
+            this.logger.log(`Analyse sur ${daysBack} jours pour l'utilisateur ${user.id}`);
 
             const preferences = await this.userPreferencesService.analyzeUserPreferences(user.id, daysBack);
 
+            this.logger.log(`Préférences récupérées avec succès pour l'utilisateur ${user.id}`);
             return preferences;
         } catch (error) {
             this.logger.error(
@@ -67,25 +87,47 @@ export class RecommendationsController {
         name: 'limit',
         required: false,
         type: Number,
-        description: 'Maximum number of items to return (default: 10)',
+        description: 'Maximum number of items to return (default: 10, max: 50)',
     })
     @ApiResponse({
         status: 200,
         description: 'Personalized recommendations successfully generated',
     })
-    async getPersonalizedContent(@UserFromRequest() user: User, @Query('limit') limit: number = 10) {
+    async getPersonalizedContent(
+        @UserFromRequest() user: User,
+        @Query('limit') limitQuery?: string, // Recevoir comme string
+    ) {
         try {
+            this.logger.log(`Demande de recommandations pour l'utilisateur ${user.id}`);
+
+            // Validation de l'utilisateur
             if (!user || !user.id) {
                 throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
             }
 
-            if (limit && (limit < 1 || limit > 50)) {
-                throw new HttpException('Le paramètre limit doit être entre 1 et 50', HttpStatus.BAD_REQUEST);
+            // CORRECTION : Conversion et validation sécurisée de limit
+            let limit = 10; // Valeur par défaut
+            if (limitQuery !== undefined) {
+                const parsed = parseInt(limitQuery, 10);
+                if (isNaN(parsed) || parsed < 1) {
+                    this.logger.warn(
+                        `Paramètre limit invalide: ${limitQuery}. Utilisation de la valeur par défaut (10).`,
+                    );
+                    limit = 10;
+                } else if (parsed > 50) {
+                    this.logger.warn(`Paramètre limit trop élevé: ${limitQuery}. Limitation à 50.`);
+                    limit = 50;
+                } else {
+                    limit = parsed;
+                }
             }
+
+            this.logger.log(`Génération de ${limit} recommandations pour l'utilisateur ${user.id}`);
 
             const recommendations = await this.userPreferencesService.getPersonalizedRecommendations(user.id, limit);
 
-            return {
+            // Ajouter des métadonnées utiles
+            const result = {
                 ...recommendations,
                 algorithm: 'content-based',
                 explanation: 'Recommandations basées sur vos préférences de contenu',
@@ -93,7 +135,13 @@ export class RecommendationsController {
                 generatedAt: new Date(),
                 totalCount:
                     recommendations.articles.length + recommendations.challenges.length + recommendations.quizz.length,
+                requestedLimit: limit,
             };
+
+            this.logger.log(
+                `Recommandations générées avec succès pour l'utilisateur ${user.id}: ${result.totalCount} éléments`,
+            );
+            return result;
         } catch (error) {
             this.logger.error(
                 `Erreur lors de la génération des recommandations pour l'utilisateur ${user?.id}: ${error.message}`,
@@ -119,6 +167,8 @@ export class RecommendationsController {
     })
     async getUserInsights(@UserFromRequest() user: User) {
         try {
+            this.logger.log(`Demande d'insights pour l'utilisateur ${user.id}`);
+
             if (!user || !user.id) {
                 throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
             }
@@ -126,16 +176,19 @@ export class RecommendationsController {
             const preferences = await this.userPreferencesService.analyzeUserPreferences(user.id);
 
             const insights = {
-                summary: this.generateUserSummary(preferences),
-                recommendations: this.generateRecommendationText(preferences),
-                trends: [], // TODO: Ajouter une méthode pour générer des tendances basées sur les préférences
+                summary: this.recommendationsService.generateUserSummary(preferences),
+                recommendations: this.recommendationsService.generateRecommendationText(preferences),
+                trends: [], // Sera implémenté plus tard
             };
 
-            return {
+            const result = {
                 preferences,
                 insights,
                 generatedAt: new Date(),
             };
+
+            this.logger.log(`Insights générés avec succès pour l'utilisateur ${user.id}`);
+            return result;
         } catch (error) {
             this.logger.error(
                 `Erreur lors de la génération des insights pour l'utilisateur ${user?.id}: ${error.message}`,
@@ -150,55 +203,6 @@ export class RecommendationsController {
                 'Erreur interne lors de la génération des insights',
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
-        }
-    }
-
-    private generateUserSummary(preferences: UserPreferencesType): string {
-        try {
-            const topCategory = preferences.favoriteCategories[0];
-            const topContentType = preferences.contentTypes[0];
-
-            if (!topCategory || !topContentType) {
-                return 'Nous collectons encore des données sur vos préférences. Continuez à explorer notre contenu !';
-            }
-
-            return (
-                `Vous montrez un fort intérêt pour ${topCategory.category.toLowerCase()} ` +
-                `et préférez interagir avec ${topContentType.type}. ` +
-                `Votre niveau de difficulté préféré est ${preferences.difficultyLevel}. ` +
-                `Score d'activité: ${Math.round(preferences.activityScore)}/100.`
-            );
-        } catch (error) {
-            this.logger.warn(`Erreur lors de la génération du résumé: ${error.message}`);
-            return "Profil en cours d'analyse.";
-        }
-    }
-
-    private generateRecommendationText(preferences: UserPreferencesType): string[] {
-        try {
-            const recommendations = [];
-
-            if (preferences.activityScore < 30) {
-                recommendations.push(
-                    "Essayez de consulter du contenu plus régulièrement pour améliorer votre expérience d'apprentissage.",
-                );
-            }
-
-            if (preferences.favoriteCategories.length > 0) {
-                const topCategory = preferences.favoriteCategories[0];
-                recommendations.push(
-                    `Basé sur votre intérêt pour ${topCategory.category}, nous vous recommandons d'explorer des sujets connexes.`,
-                );
-            }
-
-            if (preferences.difficultyLevel === 'easy') {
-                recommendations.push('Vous pourriez essayer des contenus de difficulté moyenne pour progresser.');
-            }
-
-            return recommendations;
-        } catch (error) {
-            this.logger.warn(`Erreur lors de la génération des recommandations textuelles: ${error.message}`);
-            return ['Continuez à explorer notre contenu pour recevoir des recommandations personnalisées.'];
         }
     }
 }

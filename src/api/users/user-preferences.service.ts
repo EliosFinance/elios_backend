@@ -44,31 +44,45 @@ export class UserPreferencesService {
 
     async analyzeUserPreferences(userId: number, daysBack: number = 30): Promise<UserPreferences> {
         try {
+            // CORRECTION : Validation stricte des paramètres
+            const validatedUserId = this.validateUserId(userId);
+            const validatedDaysBack = this.validateDaysBack(daysBack);
+
+            this.logger.log(
+                `Analyse des préférences pour l'utilisateur ${validatedUserId} sur ${validatedDaysBack} jours`,
+            );
+
             const cutoffDate = new Date();
-            cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+            cutoffDate.setDate(cutoffDate.getDate() - validatedDaysBack);
+
+            // CORRECTION : Validation de la date
+            if (isNaN(cutoffDate.getTime())) {
+                throw new Error(`Date invalide calculée avec daysBack: ${validatedDaysBack}`);
+            }
 
             let userLogs: RequestLog[] = [];
             try {
                 userLogs = await this.requestLogRepository.find({
                     where: {
-                        userId,
+                        userId: validatedUserId,
                         timestamp: MoreThanOrEqual(cutoffDate),
                         statusCode: 200,
                     },
                     order: { timestamp: 'DESC' },
                     take: 1000,
                 });
+                this.logger.log(`Trouvé ${userLogs.length} logs pour l'utilisateur ${validatedUserId}`);
             } catch (error) {
                 this.logger.error(`Erreur lors de la récupération des logs: ${error.message}`);
             }
 
-            const categoryAnalysis = await this.analyzeCategoryPreferences(userId, userLogs);
+            const categoryAnalysis = await this.analyzeCategoryPreferences(validatedUserId, userLogs);
             const contentTypeAnalysis = this.analyzeContentTypePreferences(userLogs);
-            const difficultyLevel = await this.analyzeDifficultyPreference(userId, userLogs);
-            const activityScore = this.calculateActivityScore(userLogs, daysBack);
+            const difficultyLevel = await this.analyzeDifficultyPreference(validatedUserId, userLogs);
+            const activityScore = this.calculateActivityScore(userLogs, validatedDaysBack);
 
             const preferences: UserPreferences = {
-                userId,
+                userId: validatedUserId,
                 favoriteCategories: categoryAnalysis,
                 contentTypes: contentTypeAnalysis,
                 difficultyLevel,
@@ -76,6 +90,7 @@ export class UserPreferencesService {
                 lastAnalyzed: new Date(),
             };
 
+            this.logger.log(`Analyse terminée pour l'utilisateur ${validatedUserId}`);
             return preferences;
         } catch (error) {
             this.logger.error(
@@ -83,26 +98,191 @@ export class UserPreferencesService {
                 error.stack,
             );
 
+            return this.getDefaultPreferences(userId);
+        }
+    }
+
+    async getPersonalizedRecommendations(
+        userId: number,
+        limit: number = 10,
+    ): Promise<{
+        articles: Article[];
+        challenges: Challenge[];
+        quizz: Quizz[];
+    }> {
+        try {
+            // CORRECTION : Validation stricte des paramètres
+            const validatedUserId = this.validateUserId(userId);
+            const validatedLimit = this.validateLimit(limit);
+
+            this.logger.log(
+                `Génération de recommandations pour l'utilisateur ${validatedUserId} (limite: ${validatedLimit})`,
+            );
+
+            const preferences = await this.analyzeUserPreferences(validatedUserId);
+            const topCategories = preferences.favoriteCategories.slice(0, 3).map((cat) => cat.category);
+
+            this.logger.log(`Top catégories: ${topCategories.join(', ')}`);
+
+            // CORRECTION : Calculs sécurisés pour les limites
+            const articlesLimit = Math.max(1, Math.floor(validatedLimit * 0.4)); // Au moins 1
+            const challengesLimit = Math.max(1, Math.floor(validatedLimit * 0.3)); // Au moins 1
+            const quizzLimit = Math.max(1, Math.floor(validatedLimit * 0.3)); // Au moins 1
+
+            this.logger.log(
+                `Limites calculées - Articles: ${articlesLimit}, Défis: ${challengesLimit}, Quizz: ${quizzLimit}`,
+            );
+
+            // Articles recommandés
+            let recommendedArticles: Article[] = [];
+            try {
+                if (topCategories.length > 0) {
+                    recommendedArticles = await this.articleRepository.find({
+                        where: {
+                            category: {
+                                title: In(topCategories),
+                            },
+                        },
+                        relations: ['category', 'authors'],
+                        take: articlesLimit,
+                        order: { creation_date: 'DESC' },
+                    });
+                } else {
+                    recommendedArticles = await this.articleRepository.find({
+                        relations: ['category', 'authors'],
+                        take: articlesLimit,
+                        order: { creation_date: 'DESC' },
+                    });
+                }
+                this.logger.log(`Trouvé ${recommendedArticles.length} articles recommandés`);
+            } catch (error) {
+                this.logger.error(`Erreur lors de la récupération des articles: ${error.message}`);
+            }
+
+            // Défis recommandés
+            let recommendedChallenges: Challenge[] = [];
+            try {
+                if (topCategories.length > 0) {
+                    recommendedChallenges = await this.challengeRepository.find({
+                        where: {
+                            category: In(topCategories),
+                        },
+                        relations: ['enterprise'],
+                        take: challengesLimit,
+                        order: { creation_date: 'DESC' },
+                    });
+                } else {
+                    recommendedChallenges = await this.challengeRepository.find({
+                        relations: ['enterprise'],
+                        take: challengesLimit,
+                        order: { creation_date: 'DESC' },
+                    });
+                }
+                this.logger.log(`Trouvé ${recommendedChallenges.length} défis recommandés`);
+            } catch (error) {
+                this.logger.error(`Erreur lors de la récupération des défis: ${error.message}`);
+            }
+
+            // Quizz recommandés
+            let recommendedQuizz: Quizz[] = [];
+            try {
+                const mappedDifficulty = this.mapDifficultyToEnum(preferences.difficultyLevel);
+
+                recommendedQuizz = await this.quizzRepository.find({
+                    where: {
+                        difficulty: mappedDifficulty,
+                    },
+                    relations: ['challenge'],
+                    take: quizzLimit,
+                    order: { id: 'DESC' },
+                });
+                this.logger.log(`Trouvé ${recommendedQuizz.length} quizz recommandés`);
+            } catch (error) {
+                this.logger.error(`Erreur lors de la récupération des quizz: ${error.message}`);
+            }
+
             return {
-                userId,
-                favoriteCategories: [],
-                contentTypes: [
-                    { type: 'articles', score: 33.33, interactionCount: 0 },
-                    { type: 'challenges', score: 33.33, interactionCount: 0 },
-                    { type: 'quizz', score: 33.33, interactionCount: 0 },
-                ],
-                difficultyLevel: 'easy',
-                activityScore: 0,
-                lastAnalyzed: new Date(),
+                articles: recommendedArticles,
+                challenges: recommendedChallenges,
+                quizz: recommendedQuizz,
+            };
+        } catch (error) {
+            this.logger.error(
+                `Erreur lors de la génération des recommandations pour l'utilisateur ${userId}: ${error.message}`,
+                error.stack,
+            );
+
+            return {
+                articles: [],
+                challenges: [],
+                quizz: [],
             };
         }
     }
+
+    // NOUVELLES MÉTHODES DE VALIDATION
+
+    private validateUserId(userId: any): number {
+        const parsed = parseInt(userId, 10);
+        if (isNaN(parsed) || parsed <= 0) {
+            throw new Error(`UserID invalide: ${userId}. Doit être un nombre positif.`);
+        }
+        return parsed;
+    }
+
+    private validateDaysBack(daysBack: any): number {
+        const parsed = parseInt(daysBack, 10);
+        if (isNaN(parsed) || parsed <= 0 || parsed > 365) {
+            this.logger.warn(`DaysBack invalide: ${daysBack}. Utilisation de la valeur par défaut (30).`);
+            return 30;
+        }
+        return parsed;
+    }
+
+    private validateLimit(limit: any): number {
+        const parsed = parseInt(limit, 10);
+        if (isNaN(parsed) || parsed <= 0) {
+            this.logger.warn(`Limite invalide: ${limit}. Utilisation de la valeur par défaut (10).`);
+            return 10;
+        }
+        if (parsed > 50) {
+            this.logger.warn(`Limite trop élevée: ${limit}. Limitation à 50.`);
+            return 50;
+        }
+        return parsed;
+    }
+
+    private mapDifficultyToEnum(difficulty: 'easy' | 'medium' | 'hard'): QuizzDifficultyEnum {
+        const mapping: Record<string, QuizzDifficultyEnum> = {
+            easy: QuizzDifficultyEnum.EASY,
+            medium: QuizzDifficultyEnum.MEDIUM,
+            hard: QuizzDifficultyEnum.HARD,
+        };
+
+        return mapping[difficulty] || QuizzDifficultyEnum.EASY;
+    }
+
+    private getDefaultPreferences(userId: number): UserPreferences {
+        return {
+            userId,
+            favoriteCategories: [],
+            contentTypes: [
+                { type: 'articles', score: 33.33, interactionCount: 0 },
+                { type: 'challenges', score: 33.33, interactionCount: 0 },
+                { type: 'quizz', score: 33.33, interactionCount: 0 },
+            ],
+            difficultyLevel: 'easy',
+            activityScore: 0,
+            lastAnalyzed: new Date(),
+        };
+    }
+
+    // MÉTHODES PRIVÉES EXISTANTES (inchangées)
 
     private async analyzeCategoryPreferences(_userId: number, logs: RequestLog[]): Promise<CategoryPreference[]> {
         try {
             const categoryInteractions = new Map<string, number>();
 
-            // Analyser les articles consultés de manière sécurisée
             const articleViewLogs = logs.filter(
                 (log) =>
                     log.url &&
@@ -196,7 +376,7 @@ export class UserPreferencesService {
             return Object.entries(contentTypeInteractions)
                 .map(([type, count]) => ({
                     type: type as 'articles' | 'challenges' | 'quizz',
-                    score: total > 0 ? (count / total) * 100 : 33.33, // Valeur par défaut
+                    score: total > 0 ? (count / total) * 100 : 33.33,
                     interactionCount: count,
                 }))
                 .sort((a, b) => b.score - a.score);
@@ -234,11 +414,11 @@ export class UserPreferencesService {
                             where: { id: quizzId },
                         });
 
-                        if (
-                            quizz?.difficulty &&
-                            Object.prototype.hasOwnProperty.call(difficultyInteractions, quizz.difficulty)
-                        ) {
-                            difficultyInteractions[quizz.difficulty]++;
+                        if (quizz?.difficulty) {
+                            const difficultyKey = quizz.difficulty.toLowerCase();
+                            if (difficultyKey in difficultyInteractions) {
+                                difficultyInteractions[difficultyKey]++;
+                            }
                         }
                     }
                 } catch (error) {
@@ -293,101 +473,6 @@ export class UserPreferencesService {
         } catch (error) {
             this.logger.warn(`Erreur lors de l'extraction de l'ID depuis l'URL: ${error.message}`);
             return null;
-        }
-    }
-
-    async getPersonalizedRecommendations(
-        userId: number,
-        limit: number = 10,
-    ): Promise<{
-        articles: Article[];
-        challenges: Challenge[];
-        quizz: Quizz[];
-    }> {
-        try {
-            const preferences = await this.analyzeUserPreferences(userId);
-
-            const topCategories = preferences.favoriteCategories.slice(0, 3).map((cat) => cat.category);
-
-            let recommendedArticles: Article[] = [];
-            try {
-                if (topCategories.length > 0) {
-                    recommendedArticles = await this.articleRepository.find({
-                        where: {
-                            category: {
-                                title: In(topCategories),
-                            },
-                        },
-                        relations: ['category', 'authors'],
-                        take: Math.ceil(limit * 0.4),
-                        order: { creation_date: 'DESC' },
-                    });
-                } else {
-                    recommendedArticles = await this.articleRepository.find({
-                        relations: ['category', 'authors'],
-                        take: Math.ceil(limit * 0.4),
-                        order: { creation_date: 'DESC' },
-                    });
-                }
-            } catch (error) {
-                this.logger.error(`Erreur lors de la récupération des articles: ${error.message}`);
-            }
-
-            let recommendedChallenges: Challenge[] = [];
-            try {
-                if (topCategories.length > 0) {
-                    recommendedChallenges = await this.challengeRepository.find({
-                        where: {
-                            category: In(topCategories),
-                        },
-                        relations: ['enterprise'],
-                        take: Math.ceil(limit * 0.3),
-                        order: { creation_date: 'DESC' },
-                    });
-                } else {
-                    recommendedChallenges = await this.challengeRepository.find({
-                        relations: ['enterprise'],
-                        take: Math.ceil(limit * 0.3),
-                        order: { creation_date: 'DESC' },
-                    });
-                }
-            } catch (error) {
-                this.logger.error(`Erreur lors de la récupération des défis: ${error.message}`);
-            }
-
-            let recommendedQuizz: Quizz[] = [];
-            try {
-                const mappedDifficulty =
-                    QuizzDifficultyEnum[preferences.difficultyLevel.toUpperCase() as keyof typeof QuizzDifficultyEnum];
-
-                recommendedQuizz = await this.quizzRepository.find({
-                    where: {
-                        difficulty: mappedDifficulty,
-                    },
-                    relations: ['challenge'],
-                    take: Math.ceil(limit * 0.3),
-                    order: { id: 'DESC' },
-                });
-            } catch (error) {
-                this.logger.error(`Erreur lors de la récupération des quizz: ${error.message}`);
-            }
-
-            return {
-                articles: recommendedArticles,
-                challenges: recommendedChallenges,
-                quizz: recommendedQuizz,
-            };
-        } catch (error) {
-            this.logger.error(
-                `Erreur lors de la génération des recommandations pour l'utilisateur ${userId}: ${error.message}`,
-                error.stack,
-            );
-
-            return {
-                articles: [],
-                challenges: [],
-                quizz: [],
-            };
         }
     }
 }

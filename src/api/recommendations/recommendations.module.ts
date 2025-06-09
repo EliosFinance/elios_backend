@@ -10,11 +10,12 @@ import { RequestLog } from '../request-logs/entities/request-log.entity';
 import { User } from '../users/entities/user.entity';
 import { UserPreferencesService } from '../users/user-preferences.service';
 import { RecommendationsController } from './recommendations.controller';
+import { RecommendationsService } from './recommendations.service';
 
 @Module({
     imports: [TypeOrmModule.forFeature([RequestLog, User, Article, Challenge, Quizz])],
     controllers: [RecommendationsController],
-    providers: [UserPreferencesService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
+    providers: [RecommendationsService, UserPreferencesService, { provide: APP_GUARD, useClass: JwtAuthGuard }],
     exports: [UserPreferencesService],
 })
 export class RecommendationsModule {}

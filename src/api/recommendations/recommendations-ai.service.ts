@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
     BehaviorAnomalyType,
@@ -8,15 +8,18 @@ import {
     TimePatternType,
     UserBehaviorPattern,
 } from '@src/types/recommendationsTypes';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { Article } from '../articles/entities/article.entity';
 import { Challenge } from '../challenges/entities/challenge.entity';
+import { Quizz } from '../quizz/entities/quizz.entity';
 import { RequestLog } from '../request-logs/entities/request-log.entity';
 import { User } from '../users/entities/user.entity';
 import { UserPreferencesService } from '../users/user-preferences.service';
 
 @Injectable()
 export class AIRecommendationsService {
+    private readonly logger: Logger;
+
     constructor(
         @InjectRepository(RequestLog)
         private readonly requestLogRepository: Repository<RequestLog>,
@@ -26,8 +29,12 @@ export class AIRecommendationsService {
         private readonly articleRepository: Repository<Article>,
         @InjectRepository(Challenge)
         private readonly challengeRepository: Repository<Challenge>,
+        @InjectRepository(Quizz)
+        private readonly quizzRepository: Repository<Quizz>,
         private readonly userPreferencesService: UserPreferencesService,
-    ) {}
+    ) {
+        this.logger = new Logger(AIRecommendationsService.name);
+    }
 
     async analyzeBehaviorPatterns(userId: number): Promise<UserBehaviorPattern> {
         const logs = await this.requestLogRepository.find({
@@ -47,7 +54,7 @@ export class AIRecommendationsService {
 
     async findSimilarUsers(userId: number, limit: number = 5): Promise<SimilarUserType[]> {
         const userPrefs = await this.userPreferencesService.analyzeUserPreferences(userId);
-        const allUsers = await this.userRepository.find({ take: 100 }); // Limitation pour performance
+        const allUsers = await this.userRepository.find({ take: 10 }); // Limitation pour performance
 
         const similarities: SimilarUserType[] = [];
 
@@ -131,31 +138,94 @@ export class AIRecommendationsService {
         bestTime: string;
         reasoning: string[];
     }> {
-        const behaviorPattern = await this.analyzeBehaviorPatterns(userId);
-        const reasoning: string[] = [];
+        try {
+            const behaviorPattern = await this.analyzeBehaviorPatterns(userId);
+            const userPreferences = await this.userPreferencesService.analyzeUserPreferences(userId);
+            const reasoning: string[] = [];
 
-        const bestTimePattern = behaviorPattern.timePatterns.sort((a, b) => b.frequency - a.frequency)[0];
+            // Déterminer le meilleur moment
+            const bestTimePattern = behaviorPattern.timePatterns.sort((a, b) => b.frequency - a.frequency)[0];
 
-        let bestTime = 'N/A';
-        if (bestTimePattern) {
-            const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-            bestTime = `${days[bestTimePattern.dayOfWeek]} à ${bestTimePattern.hour}h`;
-            reasoning.push(`Vous êtes généralement plus actif ${bestTime}`);
+            let bestTime = 'N/A';
+            if (bestTimePattern) {
+                const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+                bestTime = `${days[bestTimePattern.dayOfWeek]} à ${bestTimePattern.hour}h`;
+                reasoning.push(`Vous êtes généralement plus actif ${bestTime}`);
+            }
+
+            // Analyser la durée des sessions pour adapter le contenu
+            const shortContent = behaviorPattern.sessionDuration < 300; // 5 minutes
+            const currentTime = new Date();
+            const currentHour = currentTime.getHours();
+            const currentDay = currentTime.getDay();
+
+            if (shortContent) {
+                reasoning.push('Sessions courtes détectées - contenu rapide recommandé');
+            } else {
+                reasoning.push('Sessions longues détectées - contenu approfondi recommandé');
+            }
+
+            // Déterminer le type de contenu basé sur l'heure actuelle
+            const isWorkingHours = currentHour >= 9 && currentHour <= 17;
+            const isWeekend = currentDay === 0 || currentDay === 6;
+            const isEvening = currentHour >= 18 && currentHour <= 22;
+            const isMorning = currentHour >= 6 && currentHour <= 10;
+
+            const contentFilter = {
+                difficulty: userPreferences.difficultyLevel,
+                estimatedReadingTime: shortContent ? 5 : 15, // minutes
+                categories: userPreferences.favoriteCategories.slice(0, 2).map((c) => c.category),
+                contentType: 'mixed' as 'articles' | 'challenges' | 'quizz' | 'mixed',
+            };
+
+            // Adapter le contenu selon le moment
+            if (isMorning) {
+                contentFilter.contentType = 'articles';
+                reasoning.push('Matin détecté - articles informatifs recommandés pour bien commencer la journée');
+            } else if (isWorkingHours && !isWeekend) {
+                contentFilter.contentType = shortContent ? 'quizz' : 'articles';
+                contentFilter.estimatedReadingTime = 5; // Contenu court pendant les heures de travail
+                reasoning.push('Heures de travail - contenu rapide et éducatif recommandé');
+            } else if (isEvening) {
+                contentFilter.contentType = 'challenges';
+                reasoning.push('Soirée détectée - défis pratiques pour mettre en application vos connaissances');
+            } else if (isWeekend) {
+                contentFilter.difficulty = this.getNextDifficultyLevel(userPreferences.difficultyLevel);
+                reasoning.push('Weekend détecté - moment idéal pour approfondir vos connaissances');
+            }
+
+            // Récupérer le contenu adapté
+            const content = await this.getAdaptedContent(contentFilter, shortContent ? 5 : 10);
+
+            // Ajouter des recommandations spécifiques selon les patterns temporels
+            if (bestTimePattern && this.isOptimalTime(bestTimePattern, currentHour, currentDay)) {
+                reasoning.push("✨ C'est votre moment optimal ! Profitez-en pour explorer du contenu plus avancé.");
+
+                // Ajouter du contenu premium/avancé si c'est le moment optimal
+                const premiumContent = await this.getPremiumContent(userPreferences, 3);
+                content.push(...premiumContent);
+            }
+
+            // Recommandations basées sur l'historique temporel
+            const timeBasedSuggestions = await this.getTimeBasedSuggestions(userId, currentHour, currentDay);
+            content.push(...timeBasedSuggestions);
+
+            return {
+                content: this.shuffleAndLimitContent(content, shortContent ? 8 : 15),
+                bestTime,
+                reasoning,
+            };
+        } catch (error) {
+            this.logger.error(
+                `Erreur lors de la génération des recommandations temporelles pour l'utilisateur ${userId}:`,
+                error,
+            );
+            return {
+                content: [],
+                bestTime: 'N/A',
+                reasoning: ["Erreur lors de l'analyse temporelle. Recommandations génériques disponibles."],
+            };
         }
-
-        const shortContent = behaviorPattern.sessionDuration < 300;
-
-        if (shortContent) {
-            reasoning.push('Sessions courtes détectées - contenu rapide recommandé');
-        } else {
-            reasoning.push('Sessions longues détectées - contenu approfondi recommandé');
-        }
-
-        return {
-            content: [], //TODO: Ajouter la logique pour récupérer le contenu basé sur les préférences temporelles
-            bestTime,
-            reasoning,
-        };
     }
 
     async getHybridRecommendations(userId: number): Promise<{
@@ -410,5 +480,260 @@ export class AIRecommendationsService {
             nextRecommendationTime,
             reasoning,
         };
+    }
+
+    private async getAdaptedContent(filter: any, limit: number): Promise<any[]> {
+        const content: any[] = [];
+
+        try {
+            // Articles adaptés
+            if (filter.contentType === 'articles' || filter.contentType === 'mixed') {
+                const articlesQuery = this.articleRepository
+                    .createQueryBuilder('article')
+                    .leftJoinAndSelect('article.category', 'category')
+                    .leftJoinAndSelect('article.authors', 'authors');
+
+                if (filter.categories.length > 0) {
+                    articlesQuery.where('category.title IN (:...categories)', { categories: filter.categories });
+                }
+
+                // Filtrer par temps de lecture estimé (basé sur le nombre de mots)
+                if (filter.estimatedReadingTime <= 5) {
+                    articlesQuery.andWhere('LENGTH(article.content) <= :shortContent', { shortContent: 1500 });
+                } else {
+                    articlesQuery.andWhere('LENGTH(article.content) > :longContent', { longContent: 1500 });
+                }
+
+                const articles: Article[] = await articlesQuery
+                    .leftJoinAndSelect('article.article_content', 'content')
+                    .orderBy('article.creation_date', 'DESC')
+                    .take(Math.ceil(limit * 0.5))
+                    .getMany();
+
+                const estimatedReadingTime = 0;
+                let formattedReadingTime = '';
+
+                // Calculer le temps de lecture estimé pour chaque article
+                articles.forEach((article) => {
+                    estimatedReadingTime + article?.articleContent?.length * 1.5; // 1.5s par section de contenu
+                });
+
+                if (estimatedReadingTime > 60) {
+                    formattedReadingTime = `${Math.floor(estimatedReadingTime / 60)} minutes`;
+                } else {
+                    formattedReadingTime = `${estimatedReadingTime} secondes`;
+                }
+
+                content.push(
+                    ...articles.map((article) => ({
+                        ...article,
+                        type: 'article',
+                        estimatedTime: formattedReadingTime,
+                        relevanceScore: this.calculateTemporalRelevance(article, filter),
+                    })),
+                );
+            }
+
+            // Défis adaptés
+            if (filter.contentType === 'challenges' || filter.contentType === 'mixed') {
+                const challengesQuery = this.challengeRepository
+                    .createQueryBuilder('challenge')
+                    .leftJoinAndSelect('challenge.enterprise', 'enterprise');
+
+                if (filter.categories.length > 0) {
+                    challengesQuery.where('challenge.category IN (:...categories)', { categories: filter.categories });
+                }
+
+                const challenges = await challengesQuery
+                    .orderBy('challenge.creation_date', 'DESC')
+                    .take(Math.ceil(limit * 0.3))
+                    .getMany();
+
+                content.push(
+                    ...challenges.map((challenge) => ({
+                        ...challenge,
+                        type: 'challenge',
+                        relevanceScore: this.calculateTemporalRelevance(challenge, filter),
+                    })),
+                );
+            }
+
+            if (filter.contentType === 'quizz' || filter.contentType === 'mixed') {
+                const quizzQuery = this.quizzRepository
+                    .createQueryBuilder('quizz')
+                    .leftJoinAndSelect('quizz.challenge', 'challenge');
+
+                if (filter.difficulty) {
+                    quizzQuery.where('quizz.difficulty = :difficulty', { difficulty: filter.difficulty });
+                }
+
+                const quizzes = await quizzQuery
+                    .orderBy('quizz.id', 'DESC')
+                    .take(Math.ceil(limit * 0.2))
+                    .getMany();
+
+                content.push(
+                    ...quizzes.map((quiz) => ({
+                        ...quiz,
+                        type: 'quizz',
+                        relevanceScore: this.calculateTemporalRelevance(quiz, filter),
+                    })),
+                );
+            }
+        } catch (error) {
+            this.logger.error('Erreur lors de la récupération du contenu adapté:', error);
+        }
+
+        return content;
+    }
+
+    private async getPremiumContent(preferences: any, limit: number): Promise<any[]> {
+        try {
+            const premiumContent: any[] = [];
+
+            const topArticles = await this.articleRepository
+                .createQueryBuilder('article')
+                .leftJoinAndSelect('article.category', 'category')
+                .leftJoinAndSelect('article.likes', 'likes')
+                .where('category.title IN (:...categories)', {
+                    categories: preferences.favoriteCategories.slice(0, 2).map((c) => c.category),
+                })
+                .orderBy('article.views', 'DESC')
+                .addOrderBy('COUNT(likes.id)', 'DESC')
+                .groupBy('article.id, category.id')
+                .take(limit)
+                .getMany();
+
+            premiumContent.push(
+                ...topArticles.map((article) => ({
+                    ...article,
+                    type: 'article',
+                    isPremium: true,
+                    relevanceScore: 95,
+                })),
+            );
+
+            return premiumContent;
+        } catch (error) {
+            this.logger.error('Erreur lors de la récupération du contenu premium:', error);
+            return [];
+        }
+    }
+
+    private async getTimeBasedSuggestions(userId: number, currentHour: number, currentDay: number): Promise<any[]> {
+        try {
+            const historicalLogs = await this.requestLogRepository
+                .createQueryBuilder('log')
+                .where('log.userId = :userId', { userId })
+                .andWhere('EXTRACT(hour FROM log.timestamp) = :hour', { hour: currentHour })
+                .andWhere('EXTRACT(dow FROM log.timestamp) = :day', { day: currentDay })
+                .andWhere('log.url LIKE :pattern', { pattern: '%/articles/%' })
+                .orderBy('log.timestamp', 'DESC')
+                .take(10)
+                .getMany();
+
+            const suggestions: any[] = [];
+
+            for (const log of historicalLogs) {
+                try {
+                    const articleId = this.extractIdFromUrl(log.url, '/articles/');
+                    if (articleId) {
+                        const similarArticles = await this.findSimilarContent(articleId, 'article', 2);
+                        suggestions.push(
+                            ...similarArticles.map((article) => ({
+                                ...article,
+                                type: 'article',
+                                reason: 'similar_to_previous',
+                                relevanceScore: 75,
+                            })),
+                        );
+                    }
+                } catch (_error) {
+                    // Ignore
+                }
+            }
+
+            return suggestions.slice(0, 5); // Limiter à 5 suggestions
+        } catch (error) {
+            this.logger.error('Erreur lors de la récupération des suggestions temporelles:', error);
+            return [];
+        }
+    }
+
+    private async findSimilarContent(itemId: number, itemType: 'article' | 'challenge', limit: number): Promise<any[]> {
+        try {
+            if (itemType === 'article') {
+                const originalArticle = await this.articleRepository.findOne({
+                    where: { id: itemId },
+                    relations: ['category'],
+                });
+
+                if (originalArticle?.category) {
+                    return await this.articleRepository.find({
+                        where: {
+                            category: { title: originalArticle.category.title },
+                            id: Not(itemId), // Exclure l'article original
+                        },
+                        relations: ['category'],
+                        take: limit,
+                        order: { creation_date: 'DESC' },
+                    });
+                }
+            }
+
+            return [];
+        } catch (error) {
+            this.logger.error('Erreur lors de la recherche de contenu similaire:', error);
+            return [];
+        }
+    }
+    private getNextDifficultyLevel(currentLevel: 'easy' | 'medium' | 'hard'): 'easy' | 'medium' | 'hard' {
+        const levels = { easy: 'medium', medium: 'hard', hard: 'hard' };
+        return levels[currentLevel] as 'easy' | 'medium' | 'hard';
+    }
+
+    private isOptimalTime(bestPattern: any, currentHour: number, currentDay: number): boolean {
+        return bestPattern.hour === currentHour && bestPattern.dayOfWeek === currentDay;
+    }
+
+    private calculateTemporalRelevance(item: any, filter: any): number {
+        let score = 50;
+        if (filter.categories.includes(item.category?.title || item.category)) {
+            score += 30;
+        }
+
+        const daysSinceCreation = (Date.now() - new Date(item.creation_date).getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSinceCreation <= 7) score += 20;
+        else if (daysSinceCreation <= 30) score += 10;
+
+        const popularity = (item.views || 0) + (item.likes?.length || 0);
+        if (popularity > 100) score += 15;
+        else if (popularity > 50) score += 10;
+
+        return Math.min(100, score);
+    }
+
+    private shuffleAndLimitContent(content: any[], limit: number): any[] {
+        const sorted = content.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+        const top = sorted.slice(0, Math.min(limit, sorted.length));
+
+        for (let i = top.length - 1; i > 0; i--) {
+            if (Math.random() < 0.3) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [top[i], top[j]] = [top[j], top[i]];
+            }
+        }
+
+        return top;
+    }
+
+    private extractIdFromUrl(url: string, pattern: string): number | null {
+        try {
+            const regex = new RegExp(`${pattern.replace('/', '\\/')}(\\d+)`);
+            const match = url.match(regex);
+            return match ? parseInt(match[1], 10) : null;
+        } catch (error) {
+            return null;
+        }
     }
 }
