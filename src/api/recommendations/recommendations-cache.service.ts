@@ -107,9 +107,17 @@ export class RecommendationsCacheService {
         const entries = Array.from(this.cache.values());
         const expiredEntries = entries.filter((entry) => now > entry.expiresAt).length;
 
-        // Estimation grossière de l'utilisation mémoire
-        const memoryUsage = `${Math.round(((this.cache.size * 1024) / 1024) * 100) / 100} MB`;
+        // Calcul de l'utilisation réelle de la mémoire
+        const calculateEntrySize = (entry: CacheEntry<any>): number => {
+            const dataSize = JSON.stringify(entry.data).length; // Approximation de la taille des données
+            const overhead = 16; // Taille approximative des propriétés timestamp et expiresAt
+            return dataSize + overhead;
+        };
 
+        const totalMemoryUsageBytes = Array.from(this.cache.values())
+            .reduce((total, entry) => total + calculateEntrySize(entry), 0);
+
+        const memoryUsage = `${Math.round((totalMemoryUsageBytes / (1024 * 1024)) * 100) / 100} MB`;
         return {
             totalEntries: this.cache.size,
             expiredEntries,
