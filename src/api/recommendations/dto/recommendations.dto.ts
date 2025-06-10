@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 export enum AnalysisPeriod {
     WEEK = 'week',
@@ -167,11 +167,11 @@ export class UserPreferencesDto {
 }
 
 export class InsightsDto {
-    @ApiProperty({ description: 'User summary text' })
-    summary: string;
+    @ApiProperty({ description: 'User summary as array of strings', type: [String] })
+    summary: string[];
 
-    @ApiProperty({ description: 'Recommendations text' })
-    recommendations: string;
+    @ApiProperty({ description: 'Recommendations as array of strings', type: [String] })
+    recommendations: string[];
 
     @ApiProperty({ description: 'Motivational message' })
     motivationalMessage: string;
@@ -179,8 +179,8 @@ export class InsightsDto {
     @ApiProperty({ description: 'Financial health score', minimum: 0, maximum: 100 })
     financialScore: number;
 
-    @ApiProperty({ description: 'Advanced insights text' })
-    advancedInsights: string;
+    @ApiProperty({ description: 'Advanced insights as array of strings', type: [String] })
+    advancedInsights: string[];
 }
 
 export class FinancialScoreResponseDto {

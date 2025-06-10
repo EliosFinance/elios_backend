@@ -168,6 +168,61 @@ export class RecommendationsController {
         }
     }
 
+    @Get('financial-insights')
+    @ApiOperation({ summary: 'Get detailed user behavior insights' })
+    @ApiQuery({
+        name: 'daysBack',
+        required: false,
+        type: Number,
+        description: 'Number of days to analyze (default: 30)',
+    })
+    async getUserFinalcialInsights(@UserFromRequest() user: User, @Query('daysBack') daysBackQuery?: string) {
+        try {
+            if (!user || !user.id) {
+                throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+            }
+
+            let daysBack = 30;
+            if (daysBackQuery !== undefined) {
+                const parsed = parseInt(daysBackQuery, 10);
+                if (!isNaN(parsed) && parsed >= 1 && parsed <= 365) {
+                    daysBack = parsed;
+                }
+            }
+
+            const preferences = await this.userSpendingsService.analyzeUserPreferences(user, daysBack);
+
+            const insights = {
+                summary: this.recommendationsSpendingsService.generateUserSummary(preferences),
+                recommendations: this.recommendationsSpendingsService.generateRecommendationText(preferences),
+                motivationalMessage: this.recommendationsSpendingsService.generateMotivationalMessage(preferences),
+                financialScore: this.recommendationsSpendingsService.calculateFinancialScore(preferences),
+                advancedInsights: this.recommendationsSpendingsService.generateAdvancedInsights(preferences),
+            };
+
+            return {
+                preferences,
+                insights,
+                generatedAt: new Date(),
+                analysisPeriod: `${daysBack} jours`,
+            };
+        } catch (error) {
+            this.logger.error(
+                `Erreur lors de la génération des insights pour l'utilisateur ${user?.id}: ${error.message}`,
+                error.stack,
+            );
+
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new HttpException(
+                'Erreur interne lors de la génération des insights',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
     @Get('financial-score')
     @ApiOperation({ summary: 'Get user financial health score' })
     async getFinancialScore(@UserFromRequest() user: User) {

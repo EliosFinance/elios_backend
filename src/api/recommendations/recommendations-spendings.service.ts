@@ -5,101 +5,111 @@ import { UserSpendingsPreferencesType } from '@src/types/recommendationsTypes';
 export class RecommendationsSpendingsService {
     private readonly logger = new Logger(RecommendationsSpendingsService.name);
 
-    generateUserSummary(preferences: UserSpendingsPreferencesType): string {
+    generateUserSummary(preferences: UserSpendingsPreferencesType): string[] {
         const { financialProfile, spendingPatterns, recommendations } = preferences;
 
-        let summary = '📊 **Analyse de votre profil financier**\n\n';
+        const summary: string[] = [];
+
+        // Titre principal
+        summary.push('📊 **Analyse de votre profil financier**');
 
         // Analyse du taux d'épargne
+        let savingsAnalysis = '';
         if (financialProfile.savingsRate < 0) {
-            summary += '⚠️ **Situation critique** : Vos dépenses dépassent vos revenus. ';
+            savingsAnalysis = '⚠️ **Situation critique** : Vos dépenses dépassent vos revenus.';
         } else if (financialProfile.savingsRate < 5) {
-            summary += "⚡ **Attention** : Votre taux d'épargne est très faible. ";
+            savingsAnalysis = "⚡ **Attention** : Votre taux d'épargne est très faible.";
         } else if (financialProfile.savingsRate < 10) {
-            summary += "💡 **À améliorer** : Votre taux d'épargne peut être optimisé. ";
+            savingsAnalysis = "💡 **À améliorer** : Votre taux d'épargne peut être optimisé.";
         } else if (financialProfile.savingsRate < 20) {
-            summary += '✅ **Bien** : Vous avez un bon équilibre financier. ';
+            savingsAnalysis = '✅ **Bien** : Vous avez un bon équilibre financier.';
         } else {
-            summary += '🎉 **Excellent** : Vous gérez très bien vos finances ! ';
+            savingsAnalysis = '🎉 **Excellent** : Vous gérez très bien vos finances !';
         }
 
-        summary += `Votre taux d'épargne actuel est de ${financialProfile.savingsRate.toFixed(1)}%.\n\n`;
+        summary.push(
+            `${savingsAnalysis} Votre taux d'épargne actuel est de ${financialProfile.savingsRate.toFixed(1)}%.`,
+        );
 
         // Analyse des catégories de dépenses
         if (financialProfile.topCategories.length > 0) {
-            summary += '💰 **Vos principales dépenses** :\n';
+            summary.push('**Vos principales dépenses** :');
             financialProfile.topCategories.slice(0, 3).forEach((category, index) => {
                 const emoji = this.getCategoryEmoji(category.category);
-                summary += `${index + 1}. ${emoji} ${category.category} : ${category.amount.toFixed(0)}€ (${category.percentage.toFixed(1)}%)\n`;
+                summary.push(
+                    `${index + 1}. ${emoji} ${category.category} : ${category.amount.toFixed(0)}€ (${category.percentage.toFixed(1)}%)`,
+                );
             });
-            summary += '\n';
         }
 
         // Patterns de dépenses
-        summary += '📈 **Vos habitudes de consommation** :\n';
-        summary += `• Montant moyen par transaction : ${spendingPatterns.averageTransactionAmount.toFixed(0)}€\n`;
-        summary += `• Nombre de transactions : ${spendingPatterns.transactionFrequency}\n`;
-        summary += `• Jour de plus forte dépense : ${spendingPatterns.highestSpendingDay}\n\n`;
+        summary.push('**Vos habitudes de consommation** :');
+        summary.push(`• Montant moyen par transaction : ${spendingPatterns.averageTransactionAmount.toFixed(0)}€`);
+        summary.push(`• Nombre de transactions : ${spendingPatterns.transactionFrequency}`);
+        summary.push(`• Jour de plus forte dépense : ${spendingPatterns.highestSpendingDay}`);
 
         // Zones de risque
         if (recommendations.riskAreas.length > 0) {
-            summary += "🚨 **Points d'attention** :\n";
+            summary.push("**Points d'attention** :");
             recommendations.riskAreas.forEach((risk) => {
                 const severityEmoji = risk.severity === 'high' ? '🔴' : risk.severity === 'medium' ? '🟡' : '🟢';
-                summary += `${severityEmoji} ${risk.description}\n`;
+                summary.push(`${severityEmoji} ${risk.description}`);
             });
-            summary += '\n';
         }
 
         return summary;
     }
 
-    generateRecommendationText(preferences: UserSpendingsPreferencesType): string {
+    generateRecommendationText(preferences: UserSpendingsPreferencesType): string[] {
         const { recommendations } = preferences;
 
-        let recommendationText = '🎯 **Vos recommandations personnalisées**\n\n';
+        const recommendationText: string[] = [];
+
+        // Titre principal
+        recommendationText.push('**Vos recommandations personnalisées**');
 
         // Recommandations d'optimisation du budget
         if (recommendations.budgetOptimization.length > 0) {
-            recommendationText += '💡 **Optimisations de budget** :\n';
+            recommendationText.push('**Optimisations de budget** :');
             recommendations.budgetOptimization
                 .sort((a, b) => (b.priority === 'high' ? 1 : 0) - (a.priority === 'high' ? 1 : 0))
                 .slice(0, 3)
                 .forEach((rec, index) => {
                     const priorityEmoji = rec.priority === 'high' ? '🔥' : rec.priority === 'medium' ? '⭐' : '💡';
-                    recommendationText += `${index + 1}. ${priorityEmoji} ${rec.description}\n`;
-                    recommendationText += `   💰 Économies potentielles : ${rec.potentialSavings.toFixed(0)}€\n\n`;
+                    recommendationText.push(`${index + 1}. ${priorityEmoji} ${rec.description}`);
+                    recommendationText.push(`   Économies potentielles : ${rec.potentialSavings.toFixed(0)}€`);
                 });
         }
 
         // Opportunités d'épargne
         if (recommendations.savingsOpportunities.length > 0) {
-            recommendationText += "💎 **Opportunités d'épargne** :\n";
+            recommendationText.push("**Opportunités d'épargne** :");
             recommendations.savingsOpportunities.slice(0, 3).forEach((opp, index) => {
                 const difficultyEmoji = opp.difficulty === 'easy' ? '🟢' : opp.difficulty === 'medium' ? '🟡' : '🔴';
-                recommendationText += `${index + 1}. ${difficultyEmoji} **${opp.type}**\n`;
-                recommendationText += `   📝 ${opp.description}\n`;
-                recommendationText += `   💰 Économies : ${opp.potentialSavings.toFixed(0)}€\n`;
-                recommendationText += `   ⏱️ Délai : ${opp.timeframe}\n\n`;
+                recommendationText.push(`${index + 1}. ${difficultyEmoji} **${opp.type}**`);
+                recommendationText.push(`   ${opp.description}`);
+                recommendationText.push(`   Économies : ${opp.potentialSavings.toFixed(0)}€`);
+                recommendationText.push(`   Délai : ${opp.timeframe}`);
             });
         }
 
         // Plan d'action
-        recommendationText += "🚀 **Plan d'action recommandé** :\n";
+        recommendationText.push("**Plan d'action recommandé** :");
 
         if (preferences.financialProfile.savingsRate < 0) {
-            recommendationText +=
-                '1. 🆘 **URGENT** : Établissez un budget strict et réduisez les dépenses non essentielles\n';
-            recommendationText += '2. 💡 Identifiez 3 postes de dépense à réduire immédiatement\n';
-            recommendationText += '3. 📊 Suivez quotidiennement vos dépenses pendant 2 semaines\n';
+            recommendationText.push(
+                '1. **URGENT** : Établissez un budget strict et réduisez les dépenses non essentielles',
+            );
+            recommendationText.push('2. Identifiez 3 postes de dépense à réduire immédiatement');
+            recommendationText.push('3. Suivez quotidiennement vos dépenses pendant 2 semaines');
         } else if (preferences.financialProfile.savingsRate < 10) {
-            recommendationText += "1. 🎯 Fixez-vous un objectif d'épargne de 10% minimum\n";
-            recommendationText += '2. 🔄 Automatisez un virement vers votre compte épargne\n';
-            recommendationText += '3. 📱 Utilisez une app de budget pour suivre vos dépenses\n';
+            recommendationText.push("1. Fixez-vous un objectif d'épargne de 10% minimum");
+            recommendationText.push('2. Automatisez un virement vers votre compte épargne');
+            recommendationText.push('3. Utilisez une app de budget pour suivre vos dépenses');
         } else {
-            recommendationText += '1. 💪 Continuez sur cette lancée, vous gérez bien vos finances !\n';
-            recommendationText += '2. 📈 Explorez des placements pour faire fructifier votre épargne\n';
-            recommendationText += '3. 🎯 Définissez des objectifs financiers à long terme\n';
+            recommendationText.push('1. Continuez sur cette lancée, vous gérez bien vos finances !');
+            recommendationText.push('2. Explorez des placements pour faire fructifier votre épargne');
+            recommendationText.push('3. Définissez des objectifs financiers à long terme');
         }
 
         return recommendationText;
@@ -107,7 +117,6 @@ export class RecommendationsSpendingsService {
 
     generateMotivationalMessage(preferences: UserSpendingsPreferencesType): string {
         const savingsRate = preferences.financialProfile.savingsRate;
-        const totalSavings = preferences.financialProfile.totalIncome - preferences.financialProfile.totalExpenses;
 
         if (savingsRate < 0) {
             return '💪 Ne vous découragez pas ! Chaque petit changement compte. Commencez par identifier une dépense non essentielle à réduire cette semaine.';
@@ -142,7 +151,7 @@ export class RecommendationsSpendingsService {
     }
 
     calculateFinancialScore(preferences: UserSpendingsPreferencesType): number {
-        let score = 50; // Score de base
+        let score = 50;
 
         // Score basé sur le taux d'épargne (40 points max)
         const savingsRate = preferences.financialProfile.savingsRate;
@@ -178,18 +187,22 @@ export class RecommendationsSpendingsService {
         return Math.max(0, Math.min(100, score));
     }
 
-    generateAdvancedInsights(preferences: UserSpendingsPreferencesType): string {
-        let insights = '🔍 **Analyses avancées**\n\n';
+    generateAdvancedInsights(preferences: UserSpendingsPreferencesType): string[] {
+        const insights: string[] = [];
+
+        // Titre principal
+        insights.push('**Analyses avancées**');
 
         // Analyse de la volatilité des dépenses
         const monthlyTrend = preferences.financialProfile.monthlyTrend;
         if (monthlyTrend.length >= 2) {
             const expenseVariation = this.calculateVariation(monthlyTrend.map((m) => m.expenses));
             if (expenseVariation > 30) {
-                insights +=
-                    "📊 **Volatilité élevée** : Vos dépenses varient beaucoup d'un mois à l'autre. Essayez de lisser votre budget.\n\n";
+                insights.push(
+                    "**Volatilité élevée** : Vos dépenses varient beaucoup d'un mois à l'autre. Essayez de lisser votre budget.",
+                );
             } else if (expenseVariation < 10) {
-                insights += '📊 **Dépenses stables** : Excellente régularité dans vos dépenses !\n\n';
+                insights.push('**Dépenses stables** : Excellente régularité dans vos dépenses !');
             }
         }
 
@@ -201,17 +214,21 @@ export class RecommendationsSpendingsService {
         const recurringPercentage = (recurringTotal / preferences.financialProfile.totalExpenses) * 100;
 
         if (recurringPercentage > 70) {
-            insights +=
-                "🔄 **Budget prévisible** : ${recurringPercentage.toFixed(1)}% de vos dépenses sont récurrentes. C'est excellent pour la planification !\n\n";
+            insights.push(
+                `**Budget prévisible** : ${recurringPercentage.toFixed(1)}% de vos dépenses sont récurrentes. C'est excellent pour la planification !`,
+            );
         } else if (recurringPercentage < 30) {
-            insights +=
-                '🎲 **Dépenses impulsives** : Beaucoup de vos achats semblent spontanés. Essayez de planifier davantage.\n\n';
+            insights.push(
+                '**Dépenses impulsives** : Beaucoup de vos achats semblent spontanés. Essayez de planifier davantage.',
+            );
         }
 
         // Projection d'épargne annuelle
         const monthlySavings = preferences.financialProfile.totalIncome - preferences.financialProfile.totalExpenses;
         const annualSavingsProjection = monthlySavings * 12;
-        insights += `💰 **Projection annuelle** : À ce rythme, vous épargnerez ${annualSavingsProjection.toFixed(0)}€ cette année.\n\n`;
+        insights.push(
+            `**Projection annuelle** : À ce rythme, vous épargnerez ${annualSavingsProjection.toFixed(0)}€ cette année.`,
+        );
 
         return insights;
     }

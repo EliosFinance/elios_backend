@@ -10,7 +10,7 @@ import {
     SavingsOpportunity,
     UserSpendingsPreferencesType,
 } from '@src/types/recommendationsTypes';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { Article } from '../articles/entities/article.entity';
 import { Challenge } from '../challenges/entities/challenge.entity';
 import { PowensService } from '../powens/powens.service';
@@ -71,7 +71,7 @@ export class UserSpendingsService {
         return this.transactionRepository.find({
             where: {
                 user: { id: userId },
-                date: `>=${cutoffDate.toISOString().split('T')[0]}`,
+                date: MoreThanOrEqual(cutoffDate.toISOString()),
             },
             order: { date: 'DESC' },
         });
@@ -253,6 +253,8 @@ export class UserSpendingsService {
                 existing.push(transaction);
                 recurringMap.set(key, existing);
             });
+
+        console.log(transactions[0]);
 
         return Array.from(recurringMap.entries())
             .filter(([_, transactions]) => transactions.length >= 2)
