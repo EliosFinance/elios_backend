@@ -66,6 +66,10 @@ export class PinAuthService {
         pinAuth.lastVerifiedAt = new Date();
 
         await this.pinAuthRepository.save(pinAuth);
+
+        user.pinConfigured = true;
+        await this.userRepository.save(user);
+
         return { message: 'PIN set up successfully' };
     }
 
