@@ -43,8 +43,8 @@ export class RegistrationFlowController {
     @ApiBearerAuth('access-token')
     @ApiOperation({ summary: 'Accept terms and conditions' })
     @ApiResponse({ status: 200, description: 'Terms accepted successfully' })
-    async acceptTermsAndConditions(@Body() acceptTermsDto: AcceptTermsDto) {
-        return this.registrationFlowService.acceptTermsAndConditions(acceptTermsDto.userId);
+    async acceptTermsAndConditions(@UserFromRequest() user: User) {
+        return this.registrationFlowService.acceptTermsAndConditions(user.id);
     }
 
     @Put('profile')
