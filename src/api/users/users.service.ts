@@ -91,6 +91,10 @@ export class UsersService {
                 likedArticles: true,
                 update_date: true,
                 creation_date: true,
+                emailVerified: true,
+                profileComplete: true,
+                pinConfigured: true,
+                provider: true,
                 notifications: {
                     id: true,
                     budget: true,
