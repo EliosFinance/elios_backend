@@ -1,31 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import {
+    CategoryPreferenceType,
+    ContentTypePreferenceType,
+    UserPreferencesType,
+} from '@src/types/recommendationsTypes';
 import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { Article } from '../articles/entities/article.entity';
 import { Challenge } from '../challenges/entities/challenge.entity';
 import { Quizz, QuizzDifficultyEnum } from '../quizz/entities/quizz.entity';
 import { RequestLog } from '../request-logs/entities/request-log.entity';
-
-export interface UserPreferences {
-    userId: number;
-    favoriteCategories: CategoryPreference[];
-    contentTypes: ContentTypePreference[];
-    difficultyLevel: 'easy' | 'medium' | 'hard';
-    activityScore: number;
-    lastAnalyzed: Date;
-}
-
-export interface CategoryPreference {
-    category: string;
-    score: number;
-    interactionCount: number;
-}
-
-export interface ContentTypePreference {
-    type: 'articles' | 'challenges' | 'quizz';
-    score: number;
-    interactionCount: number;
-}
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserPreferencesService {
@@ -42,9 +27,8 @@ export class UserPreferencesService {
         private readonly quizzRepository: Repository<Quizz>,
     ) {}
 
-    async analyzeUserPreferences(userId: number, daysBack: number = 30): Promise<UserPreferences> {
+    async analyzeUserPreferences(userId: number, daysBack: number = 30): Promise<UserPreferencesType> {
         try {
-            // CORRECTION : Validation stricte des paramètres
             const validatedUserId = this.validateUserId(userId);
             const validatedDaysBack = this.validateDaysBack(daysBack);
 
@@ -55,7 +39,6 @@ export class UserPreferencesService {
             const cutoffDate = new Date();
             cutoffDate.setDate(cutoffDate.getDate() - validatedDaysBack);
 
-            // CORRECTION : Validation de la date
             if (isNaN(cutoffDate.getTime())) {
                 throw new Error(`Date invalide calculée avec daysBack: ${validatedDaysBack}`);
             }
@@ -81,7 +64,7 @@ export class UserPreferencesService {
             const difficultyLevel = await this.analyzeDifficultyPreference(validatedUserId, userLogs);
             const activityScore = this.calculateActivityScore(userLogs, validatedDaysBack);
 
-            const preferences: UserPreferences = {
+            const preferences: UserPreferencesType = {
                 userId: validatedUserId,
                 favoriteCategories: categoryAnalysis,
                 contentTypes: contentTypeAnalysis,
@@ -103,7 +86,7 @@ export class UserPreferencesService {
     }
 
     async getPersonalizedRecommendations(
-        userId: number,
+        user: User,
         limit: number = 10,
     ): Promise<{
         articles: Article[];
@@ -111,7 +94,7 @@ export class UserPreferencesService {
         quizz: Quizz[];
     }> {
         try {
-            // CORRECTION : Validation stricte des paramètres
+            const { id: userId } = user;
             const validatedUserId = this.validateUserId(userId);
             const validatedLimit = this.validateLimit(limit);
 
@@ -124,7 +107,6 @@ export class UserPreferencesService {
 
             this.logger.log(`Top catégories: ${topCategories.join(', ')}`);
 
-            // CORRECTION : Calculs sécurisés pour les limites
             const articlesLimit = Math.max(1, Math.floor(validatedLimit * 0.4)); // Au moins 1
             const challengesLimit = Math.max(1, Math.floor(validatedLimit * 0.3)); // Au moins 1
             const quizzLimit = Math.max(1, Math.floor(validatedLimit * 0.3)); // Au moins 1
@@ -133,7 +115,7 @@ export class UserPreferencesService {
                 `Limites calculées - Articles: ${articlesLimit}, Défis: ${challengesLimit}, Quizz: ${quizzLimit}`,
             );
 
-            // Articles recommandés
+            // Articles
             let recommendedArticles: Article[] = [];
             try {
                 if (topCategories.length > 0) {
@@ -159,7 +141,7 @@ export class UserPreferencesService {
                 this.logger.error(`Erreur lors de la récupération des articles: ${error.message}`);
             }
 
-            // Défis recommandés
+            // Challenges
             let recommendedChallenges: Challenge[] = [];
             try {
                 if (topCategories.length > 0) {
@@ -183,7 +165,7 @@ export class UserPreferencesService {
                 this.logger.error(`Erreur lors de la récupération des défis: ${error.message}`);
             }
 
-            // Quizz recommandés
+            // Quizz
             let recommendedQuizz: Quizz[] = [];
             try {
                 const mappedDifficulty = this.mapDifficultyToEnum(preferences.difficultyLevel);
@@ -208,7 +190,7 @@ export class UserPreferencesService {
             };
         } catch (error) {
             this.logger.error(
-                `Erreur lors de la génération des recommandations pour l'utilisateur ${userId}: ${error.message}`,
+                `Erreur lors de la génération des recommandations pour l'utilisateur ${user.id}: ${error.message}`,
                 error.stack,
             );
 
@@ -219,8 +201,6 @@ export class UserPreferencesService {
             };
         }
     }
-
-    // NOUVELLES MÉTHODES DE VALIDATION
 
     private validateUserId(userId: any): number {
         const parsed = parseInt(userId, 10);
@@ -262,7 +242,7 @@ export class UserPreferencesService {
         return mapping[difficulty] || QuizzDifficultyEnum.EASY;
     }
 
-    private getDefaultPreferences(userId: number): UserPreferences {
+    private getDefaultPreferences(userId: number): UserPreferencesType {
         return {
             userId,
             favoriteCategories: [],
@@ -277,9 +257,7 @@ export class UserPreferencesService {
         };
     }
 
-    // MÉTHODES PRIVÉES EXISTANTES (inchangées)
-
-    private async analyzeCategoryPreferences(_userId: number, logs: RequestLog[]): Promise<CategoryPreference[]> {
+    private async analyzeCategoryPreferences(_userId: number, logs: RequestLog[]): Promise<CategoryPreferenceType[]> {
         try {
             const categoryInteractions = new Map<string, number>();
 
@@ -347,7 +325,7 @@ export class UserPreferencesService {
         }
     }
 
-    private analyzeContentTypePreferences(logs: RequestLog[]): ContentTypePreference[] {
+    private analyzeContentTypePreferences(logs: RequestLog[]): ContentTypePreferenceType[] {
         try {
             const contentTypeInteractions = {
                 articles: 0,

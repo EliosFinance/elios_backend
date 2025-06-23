@@ -1,11 +1,12 @@
-// src/api/recommendations/recommendations.controller.ts - VERSION CORRIGÉE
-
 import { Controller, Get, HttpException, HttpStatus, Logger, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
+import { UserPreferencesType } from '@src/types/recommendationsTypes';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../users/entities/user.entity';
-import { UserPreferences, UserPreferencesService } from '../users/user-preferences.service';
+import { UserPreferencesService } from '../users/user-preferences.service';
+import { UserSpendingsService } from '../users/user-spendings.service';
+import { RecommendationsSpendingsService } from './recommendations-spendings.service';
 import { RecommendationsService } from './recommendations.service';
 
 @ApiTags('Recommendations')
@@ -17,6 +18,8 @@ export class RecommendationsController {
 
     constructor(
         private readonly userPreferencesService: UserPreferencesService,
+        private readonly userSpendingsService: UserSpendingsService,
+        private readonly recommendationsSpendingsService: RecommendationsSpendingsService,
         private readonly recommendationsService: RecommendationsService,
     ) {}
 
@@ -28,24 +31,16 @@ export class RecommendationsController {
         type: Number,
         description: 'Number of days to analyze (default: 30, max: 365)',
     })
-    @ApiResponse({
-        status: 200,
-        description: 'User preferences successfully analyzed',
-    })
     async getUserPreferences(
         @UserFromRequest() user: User,
-        @Query('daysBack') daysBackQuery?: string, // Recevoir comme string
-    ): Promise<UserPreferences> {
+        @Query('daysBack') daysBackQuery?: string,
+    ): Promise<UserPreferencesType> {
         try {
-            this.logger.log(`Demande d'analyse des préférences pour l'utilisateur ${user.id}`);
-
-            // Validation de l'utilisateur
             if (!user || !user.id) {
                 throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
             }
 
-            // CORRECTION : Conversion et validation sécurisée de daysBack
-            let daysBack = 30; // Valeur par défaut
+            let daysBack = 30;
             if (daysBackQuery !== undefined) {
                 const parsed = parseInt(daysBackQuery, 10);
                 if (isNaN(parsed) || parsed < 1 || parsed > 365) {
@@ -58,12 +53,7 @@ export class RecommendationsController {
                 }
             }
 
-            this.logger.log(`Analyse sur ${daysBack} jours pour l'utilisateur ${user.id}`);
-
-            const preferences = await this.userPreferencesService.analyzeUserPreferences(user.id, daysBack);
-
-            this.logger.log(`Préférences récupérées avec succès pour l'utilisateur ${user.id}`);
-            return preferences;
+            return await this.userPreferencesService.analyzeUserPreferences(user.id, daysBack);
         } catch (error) {
             this.logger.error(
                 `Erreur lors de la récupération des préférences pour l'utilisateur ${user?.id}: ${error.message}`,
@@ -89,23 +79,12 @@ export class RecommendationsController {
         type: Number,
         description: 'Maximum number of items to return (default: 10, max: 50)',
     })
-    @ApiResponse({
-        status: 200,
-        description: 'Personalized recommendations successfully generated',
-    })
-    async getPersonalizedContent(
-        @UserFromRequest() user: User,
-        @Query('limit') limitQuery?: string, // Recevoir comme string
-    ) {
+    async getPersonalizedContent(@UserFromRequest() user: User, @Query('limit') limitQuery?: string) {
         try {
-            this.logger.log(`Demande de recommandations pour l'utilisateur ${user.id}`);
-
-            // Validation de l'utilisateur
             if (!user || !user.id) {
                 throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
             }
 
-            // CORRECTION : Conversion et validation sécurisée de limit
             let limit = 10; // Valeur par défaut
             if (limitQuery !== undefined) {
                 const parsed = parseInt(limitQuery, 10);
@@ -122,12 +101,9 @@ export class RecommendationsController {
                 }
             }
 
-            this.logger.log(`Génération de ${limit} recommandations pour l'utilisateur ${user.id}`);
+            const recommendations = await this.userPreferencesService.getPersonalizedRecommendations(user, limit);
 
-            const recommendations = await this.userPreferencesService.getPersonalizedRecommendations(user.id, limit);
-
-            // Ajouter des métadonnées utiles
-            const result = {
+            return {
                 ...recommendations,
                 algorithm: 'content-based',
                 explanation: 'Recommandations basées sur vos préférences de contenu',
@@ -137,11 +113,6 @@ export class RecommendationsController {
                     recommendations.articles.length + recommendations.challenges.length + recommendations.quizz.length,
                 requestedLimit: limit,
             };
-
-            this.logger.log(
-                `Recommandations générées avec succès pour l'utilisateur ${user.id}: ${result.totalCount} éléments`,
-            );
-            return result;
         } catch (error) {
             this.logger.error(
                 `Erreur lors de la génération des recommandations pour l'utilisateur ${user?.id}: ${error.message}`,
@@ -161,14 +132,8 @@ export class RecommendationsController {
 
     @Get('insights')
     @ApiOperation({ summary: 'Get detailed user behavior insights' })
-    @ApiResponse({
-        status: 200,
-        description: 'User insights successfully generated',
-    })
     async getUserInsights(@UserFromRequest() user: User) {
         try {
-            this.logger.log(`Demande d'insights pour l'utilisateur ${user.id}`);
-
             if (!user || !user.id) {
                 throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
             }
@@ -178,17 +143,14 @@ export class RecommendationsController {
             const insights = {
                 summary: this.recommendationsService.generateUserSummary(preferences),
                 recommendations: this.recommendationsService.generateRecommendationText(preferences),
-                trends: [], // Sera implémenté plus tard
+                trends: [], // TODO: Implement trend analysis
             };
 
-            const result = {
+            return {
                 preferences,
                 insights,
                 generatedAt: new Date(),
             };
-
-            this.logger.log(`Insights générés avec succès pour l'utilisateur ${user.id}`);
-            return result;
         } catch (error) {
             this.logger.error(
                 `Erreur lors de la génération des insights pour l'utilisateur ${user?.id}: ${error.message}`,
@@ -203,6 +165,196 @@ export class RecommendationsController {
                 'Erreur interne lors de la génération des insights',
                 HttpStatus.INTERNAL_SERVER_ERROR,
             );
+        }
+    }
+
+    @Get('financial-insights')
+    @ApiOperation({ summary: 'Get detailed user behavior insights' })
+    @ApiQuery({
+        name: 'daysBack',
+        required: false,
+        type: Number,
+        description: 'Number of days to analyze (default: 30)',
+    })
+    async getUserFinalcialInsights(@UserFromRequest() user: User, @Query('daysBack') daysBackQuery?: string) {
+        try {
+            if (!user || !user.id) {
+                throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+            }
+
+            let daysBack = 30;
+            if (daysBackQuery !== undefined) {
+                const parsed = parseInt(daysBackQuery, 10);
+                if (!isNaN(parsed) && parsed >= 1 && parsed <= 365) {
+                    daysBack = parsed;
+                }
+            }
+
+            const preferences = await this.userSpendingsService.analyzeUserPreferences(user, daysBack);
+
+            const insights = {
+                summary: this.recommendationsSpendingsService.generateUserSummary(preferences),
+                recommendations: this.recommendationsSpendingsService.generateRecommendationText(preferences),
+                motivationalMessage: this.recommendationsSpendingsService.generateMotivationalMessage(preferences),
+                financialScore: this.recommendationsSpendingsService.calculateFinancialScore(preferences),
+                advancedInsights: this.recommendationsSpendingsService.generateAdvancedInsights(preferences),
+            };
+
+            return {
+                preferences,
+                insights,
+                generatedAt: new Date(),
+                analysisPeriod: `${daysBack} jours`,
+            };
+        } catch (error) {
+            this.logger.error(
+                `Erreur lors de la génération des insights pour l'utilisateur ${user?.id}: ${error.message}`,
+                error.stack,
+            );
+
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new HttpException(
+                'Erreur interne lors de la génération des insights',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    @Get('financial-score')
+    @ApiOperation({ summary: 'Get user financial health score' })
+    async getFinancialScore(@UserFromRequest() user: User) {
+        try {
+            if (!user || !user.id) {
+                throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+            }
+
+            const preferences = await this.userSpendingsService.analyzeUserPreferences(user);
+            const score = this.recommendationsSpendingsService.calculateFinancialScore(preferences);
+
+            let level = 'Débutant';
+            if (score >= 80) level = 'Expert';
+            else if (score >= 65) level = 'Avancé';
+            else if (score >= 45) level = 'Intermédiaire';
+
+            const breakdown = {
+                savingsRate: preferences.financialProfile.savingsRate,
+                categoryDiversification: preferences.financialProfile.topCategories.length,
+                riskFactors: preferences.recommendations.riskAreas.length,
+                budgetOptimization: preferences.recommendations.budgetOptimization.length,
+            };
+
+            const improvements = [];
+            if (preferences.financialProfile.savingsRate < 10) {
+                improvements.push("Augmentez votre taux d'épargne à au moins 10%");
+            }
+            if (preferences.recommendations.riskAreas.length > 0) {
+                improvements.push('Adressez les zones de risque identifiées');
+            }
+            if (preferences.recommendations.budgetOptimization.length > 2) {
+                improvements.push('Optimisez votre budget selon les recommandations');
+            }
+
+            return {
+                score,
+                level,
+                breakdown,
+                improvements,
+                generatedAt: new Date(),
+            };
+        } catch (error) {
+            this.logger.error(
+                `Erreur lors du calcul du score financier pour l'utilisateur ${user?.id}: ${error.message}`,
+                error.stack,
+            );
+
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new HttpException(
+                'Erreur interne lors du calcul du score financier',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+        }
+    }
+
+    @Get('spending-analysis')
+    @ApiOperation({ summary: 'Get detailed spending analysis and forecasts' })
+    @ApiQuery({
+        name: 'period',
+        required: false,
+        type: String,
+        description: 'Analysis period: week, month, quarter, year (default: month)',
+    })
+    async getSpendingAnalysis(@UserFromRequest() user: User, @Query('period') period: string = 'month') {
+        try {
+            if (!user || !user.id) {
+                throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+            }
+
+            const daysBack = this.getPeriodDays(period);
+            const preferences = await this.userSpendingsService.analyzeUserPreferences(user, daysBack);
+
+            const monthlyData = preferences.financialProfile.monthlyTrend;
+            let forecast = null;
+
+            if (monthlyData.length >= 2) {
+                const lastMonth = monthlyData[monthlyData.length - 1];
+                const previousMonth = monthlyData[monthlyData.length - 2];
+
+                const expensesTrend = ((lastMonth.expenses - previousMonth.expenses) / previousMonth.expenses) * 100;
+                const incomeTrend = ((lastMonth.income - previousMonth.income) / previousMonth.income) * 100;
+
+                forecast = {
+                    nextMonthExpenses: lastMonth.expenses * (1 + expensesTrend / 100),
+                    nextMonthIncome: lastMonth.income * (1 + incomeTrend / 100),
+                    trend: expensesTrend > 5 ? 'increasing' : expensesTrend < -5 ? 'decreasing' : 'stable',
+                };
+            }
+
+            return {
+                period,
+                analysis: {
+                    totalExpenses: preferences.financialProfile.totalExpenses,
+                    totalIncome: preferences.financialProfile.totalIncome,
+                    savingsRate: preferences.financialProfile.savingsRate,
+                    topCategories: preferences.financialProfile.topCategories,
+                    monthlyTrend: monthlyData,
+                    spendingPatterns: preferences.spendingPatterns,
+                },
+                forecast,
+                insights: this.recommendationsSpendingsService.generateAdvancedInsights(preferences),
+                generatedAt: new Date(),
+            };
+        } catch (error) {
+            this.logger.error(
+                `Erreur lors de l'analyse des dépenses pour l'utilisateur ${user?.id}: ${error.message}`,
+                error.stack,
+            );
+
+            if (error instanceof HttpException) {
+                throw error;
+            }
+
+            throw new HttpException("Erreur interne lors de l'analyse des dépenses", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private getPeriodDays(period: string): number {
+        switch (period.toLowerCase()) {
+            case 'week':
+                return 7;
+            case 'month':
+                return 30;
+            case 'quarter':
+                return 90;
+            case 'year':
+                return 365;
+            default:
+                return 30;
         }
     }
 }

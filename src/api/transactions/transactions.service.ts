@@ -18,6 +18,7 @@ export class TransactionsService {
 
     async syncTransactions(userId: number, powensToken: string) {
         const apiUrl = `${process.env.POWENS_CLIENT_URL}users/me/transactions?limit=1000`;
+        // const apiUrl = `${process.env.POWENS_CLIENT_URL}users/me/transactions?expand=categories&limit=1000`;
 
         let response = await lastValueFrom(
             this.httpService.get(apiUrl, {
