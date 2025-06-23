@@ -144,7 +144,7 @@ export class User {
 
     // Nouvelles méthodes utiles
     isRegistrationComplete(): boolean {
-        return this.emailVerified && this.pinConfigured && this.termsAcceptedAt && this.profileComplete;
+        return this.emailVerified && this.pinConfigured && !!this.termsAcceptedAt && this.profileComplete;
     }
 
     getNextRegistrationStep(): string | null {
