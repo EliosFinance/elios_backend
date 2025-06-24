@@ -13,6 +13,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { RequestLogsModule } from '@src/api/request-logs/request-logs.module';
 import { MiddlewareModule } from '@src/middlewares/middleware.module';
 import { RequestLoggerMiddleware } from '@src/middlewares/request-logger.middleware';
+import { StripeModule } from '@src/stripe/stripe.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { LoggingInterceptor } from '../logging.interceptor';
 import { AppController } from './app.controller';
@@ -45,6 +46,7 @@ if (process.env.NODE_ENV !== 'production') {
             autoLoadEntities: true,
             logging: false,
         }),
+        StripeModule,
         PowensModule,
         AuthModule,
         UsersModule,
