@@ -1,6 +1,6 @@
 import { UserLightType } from '@src/api/users/dto/user-light.dto';
 import { User } from '@src/api/users/entities/user.entity';
-import { ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/ChallengeStepsTypes';
+import { ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/challengeStepsTypes';
 import {
     Column,
     CreateDateColumn,

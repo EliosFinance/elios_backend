@@ -1,4 +1,4 @@
-import { ChallengeStateMachineConfigType } from '@src/types/ChallengeStepsTypes';
+import { ChallengeStateMachineConfigType } from '@src/types/challengeStepsTypes';
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { CategoryChallenge } from '../entities/challenge.entity';
 

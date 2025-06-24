@@ -2,7 +2,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
-import { CHALLENGE_QUEUE_NAME } from '@src/types/ChallengeStepsTypes';
+import { CHALLENGE_QUEUE_NAME } from '@src/types/challengeStepsTypes';
 import { Queue } from 'bullmq';
 import { ChallengesService } from './challenges.service';
 import { CreateChallengeDto } from './dto/create-challenge-dto';

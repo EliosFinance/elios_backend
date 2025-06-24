@@ -1,14 +1,15 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
+import * as bcrypt from 'bcrypt';
 import { OAuth2Client } from 'google-auth-library';
 import { Repository } from 'typeorm';
-import { RegisterUserDto } from '../users/dto/register-user.dto';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { SignInDto } from './dto/sign-in.dto';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
+import { PinAuthService } from './services/pin-auth.service';
 import { JwtRefreshTokenStrategy } from './strategy/jwt-refresh-token.strategy';
 
 @Injectable()
@@ -19,6 +20,7 @@ export class AuthService {
         private readonly usersService: UsersService,
         private readonly jwtService: JwtService,
         private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
+        @Inject(forwardRef(() => PinAuthService)) private readonly pinAuthService: PinAuthService,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
     ) {
@@ -43,17 +45,21 @@ export class AuthService {
             throw new UnauthorizedException('Invalid username or password');
         }
 
+        // Vérifier si le PIN est configuré avant d'essayer de le débloquer
+        const isPinSetup = await this.pinAuthService.isPinSetup(user.id);
+        if (isPinSetup) {
+            // Débloquer le PIN lors de la connexion seulement s'il est configuré
+            await this.pinAuthService.unlockPin(user.id);
+        }
+
         if (!user.powens_token) {
             const payloadForPowens = {
-                client_id: '70395459',
-                client_secret: 'j7IX1ETJ4zyRUt8XucEaSSsuEz/oYhCK',
+                client_id: process.env.POWENS_CLIENT_ID,
+                client_secret: process.env.POWENS_CLIENT_SECRET,
             };
 
             try {
-                const response = await axios.post(
-                    'https://lperrenot-sandbox.biapi.pro/2.0/auth/init',
-                    payloadForPowens,
-                );
+                const response = await axios.post(`${process.env.POWENS_CLIENT_URL}auth/init`, payloadForPowens);
                 const { auth_token, id_user } = response.data;
                 console.log(auth_token, id_user);
                 user.powens_token = auth_token;
@@ -77,6 +83,7 @@ export class AuthService {
         await this.refreshTokenIdsStorage.insert(user.id, refreshToken);
 
         return {
+            id: user.id,
             access_token: accessToken,
             refresh_token: refreshToken,
             username: user.username,
@@ -102,54 +109,66 @@ export class AuthService {
         }
 
         const email = payload.email;
+        const googleId = payload.sub;
         let user = await this.usersService.findOneByUsernameOrEmail(email);
+
         if (!user) {
             const username = email.split('@')[0];
             const randomPassword = Math.random().toString(36).slice(-8);
 
             const payloadForPowens = {
-                client_id: '70395459',
-                client_secret: 'j7IX1ETJ4zyRUt8XucEaSSsuEz/oYhCK',
+                client_id: process.env.POWENS_CLIENT_ID,
+                client_secret: process.env.POWENS_CLIENT_SECRET,
             };
 
             try {
-                const response = await axios.post(
-                    'https://lperrenot-sandbox.biapi.pro/2.0/auth/init',
-                    payloadForPowens,
-                );
+                const response = await axios.post(`${process.env.POWENS_CLIENT_URL}auth/init`, payloadForPowens);
                 const { auth_token, id_user } = response.data;
-                const powens_token = auth_token;
-                const powens_id = id_user;
-                const registerUserDto: RegisterUserDto = {
+
+                // Créer l'utilisateur avec les nouveaux champs
+                const newUser = this.userRepository.create({
                     username,
                     email,
-                    password: randomPassword,
-                    powens_token: powens_token,
-                };
-                user = await this.usersService.create(registerUserDto);
+                    password: await bcrypt.hash(randomPassword, 10),
+                    powens_token: auth_token,
+                    powens_id: id_user,
+                    provider: 'google',
+                    googleId: googleId,
+                    emailVerified: true,
+                    profileComplete: false,
+                    pinConfigured: false,
+                    termsAcceptedAt: null,
+                });
 
-                const jwtPayload = { sub: user.id, username: user.username };
-                const accessToken = await this.jwtService.signAsync(jwtPayload);
-                const refreshToken = await this.jwtService.signAsync(jwtPayload, { expiresIn: '1d' });
-                await this.refreshTokenIdsStorage.insert(user.id, refreshToken);
-
-                return {
-                    access_token: accessToken,
-                    refresh_token: refreshToken,
-                    username: user.username,
-                    powens_token: user.powens_token, // si nécessaire dans votre cas d'usage
-                };
+                user = await this.userRepository.save(newUser);
             } catch (error) {
                 console.error('Error during Powens API call: ', error);
                 throw new Error('Failed to initialize Powens auth token');
             }
+        } else {
+            // Utilisateur existant - mettre à jour les infos Google si nécessaire
+            if (user.provider !== 'google') {
+                user.provider = 'google';
+                user.googleId = googleId;
+                user.emailVerified = true;
+                await this.userRepository.save(user);
+            }
         }
+
+        // Déverrouiller le PIN si configuré
+        const isPinSetup = await this.pinAuthService.isPinSetup(user.id);
+        if (isPinSetup) {
+            await this.pinAuthService.unlockPin(user.id);
+        }
+
+        // Générer les tokens JWT
         const jwtPayload = { sub: user.id, username: user.username };
         const accessToken = await this.jwtService.signAsync(jwtPayload);
         const refreshToken = await this.jwtService.signAsync(jwtPayload, { expiresIn: '1d' });
         await this.refreshTokenIdsStorage.insert(user.id, refreshToken);
 
         return {
+            id: user.id,
             access_token: accessToken,
             refresh_token: refreshToken,
             username: user.username,
@@ -196,5 +215,10 @@ export class AuthService {
         } catch (error) {
             throw new UnauthorizedException('Invalid access token');
         }
+    }
+
+    async invalidateUserTokens(userId: number): Promise<void> {
+        await this.refreshTokenIdsStorage.invalidate(userId);
+        this.logger.log(`All tokens invalidated for user ${userId}`);
     }
 }

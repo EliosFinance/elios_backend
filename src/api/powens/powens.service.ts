@@ -1,7 +1,11 @@
+import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
+import { lastValueFrom } from 'rxjs';
 import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
 import { Connector } from './entities/connector.entity';
 
 @Injectable()
@@ -9,11 +13,13 @@ export class PowensService {
     constructor(
         @InjectRepository(Connector)
         private readonly connectorRepository: Repository<Connector>,
+        private readonly usersService: UsersService,
+        private readonly httpService: HttpService,
     ) {}
 
     async syncConnector() {
         try {
-            const response = await axios.get('https://lperrenot-sandbox.biapi.pro/2.0/connectors');
+            const response = await axios.get(`${process.env.POWENS_CLIENT_URL}connectors`);
             const apiConnectors = response.data.connectors;
 
             const dbConnectors = await this.connectorRepository.find();
@@ -53,7 +59,7 @@ export class PowensService {
 
         return {
             ...connector,
-            logo: `https://lperrenot-sandbox.biapi.pro/2.0/logos/${connector.uuid}-thumbnail.webp`,
+            logo: `${process.env.POWENS_CLIENT_URL}logos/${connector.uuid}-thumbnail.webp`,
         } as Connector;
     }
 
@@ -62,8 +68,56 @@ export class PowensService {
 
         return connectors.map((connector) => ({
             ...connector,
-            logo: `https://lperrenot-sandbox.biapi.pro/2.0/logos/${connector.uuid}-thumbnail.webp`,
+            logo: `${process.env.POWENS_CLIENT_URL}logos/${connector.uuid}-thumbnail.webp`,
         }));
+    }
+
+    async getUserConnections(user: User): Promise<Connector[]> {
+        const response = await lastValueFrom(
+            this.httpService.get(
+                `${process.env.POWENS_CLIENT_URL}users/me/connections?expand=connector,accounts,subscriptions`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${user.powens_token}`,
+                    },
+                },
+            ),
+        );
+
+        return response.data.connections;
+    }
+
+    async deleteUserConnection(user: User, connectionId: string): Promise<void> {
+        const response = await axios.delete(`${process.env.POWENS_CLIENT_URL}users/me/connections/${connectionId}`, {
+            headers: {
+                Authorization: `Bearer ${user.powens_token}`,
+            },
+        });
+
+        return response.data;
+    }
+
+    async getBigToken(query: any) {
+        const { code, userId } = query;
+        try {
+            const response = await lastValueFrom(
+                this.httpService.post(`${process.env.POWENS_CLIENT_URL}auth/token/access`, {
+                    code,
+                    client_id: process.env.POWENS_CLIENT_ID,
+                    client_secret: process.env.POWENS_CLIENT_SECRET,
+                }),
+            );
+
+            const tokenData = response.data;
+            await this.usersService.updateUser(userId, {
+                powens_token: tokenData.access_token,
+            });
+            return {
+                url: `http://localhost:5173/?token=${tokenData.access_token}`,
+            };
+        } catch (error: any) {
+            console.error('Error fetching token: ', error);
+        }
     }
 
     private hasConnectorChanged(dbConnector: Connector, apiConnector: any): boolean {

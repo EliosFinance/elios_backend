@@ -9,6 +9,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { RequestLogsModule } from '@src/api/request-logs/request-logs.module';
 import { MiddlewareModule } from '@src/middlewares/middleware.module';
 import { RequestLoggerMiddleware } from '@src/middlewares/request-logger.middleware';
@@ -19,16 +20,20 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
 import { QuizzModule } from './quizz/quizz.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 
-console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
-console.warn('POSTGRES_PORT', process.env.POSTGRES_PORT);
-console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
-console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
-console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
+if (process.env.NODE_ENV !== 'production') {
+    console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
+    console.warn('POSTGRES_PORT', process.env.POSTGRES_PORT);
+    console.warn('POSTGRES_USER', process.env.POSTGRES_USER);
+    console.warn('POSTGRES_PASSWORD', process.env.POSTGRES_PASSWORD);
+    console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
+}
 
 @Module({
     imports: [
         // TypeOrmModule.forRoot(dataSource.options),
+        ScheduleModule.forRoot(),
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: String(process.env.POSTGRES_HOST),
@@ -53,6 +58,7 @@ console.warn('POSTGRES_DB', process.env.POSTGRES_DB);
         ContentTypeModule,
         RequestLogsModule,
         MiddlewareModule,
+        RecommendationsModule,
         PrometheusModule.register(),
     ],
     controllers: [AppController],

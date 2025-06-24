@@ -17,7 +17,8 @@ export class TransactionsService {
     ) {}
 
     async syncTransactions(userId: number, powensToken: string) {
-        const apiUrl = 'https://lperrenot-sandbox.biapi.pro/2.0/users/me/transactions?limit=1000';
+        const apiUrl = `${process.env.POWENS_CLIENT_URL}users/me/transactions?limit=1000`;
+        // const apiUrl = `${process.env.POWENS_CLIENT_URL}users/me/transactions?expand=categories&limit=1000`;
 
         let response = await lastValueFrom(
             this.httpService.get(apiUrl, {
@@ -48,6 +49,7 @@ export class TransactionsService {
     async getUserTransactions(userId: number, order: 'ASC' | 'DESC' = 'DESC'): Promise<Transaction[]> {
         const transactions = await this.transactionsRepository.find({
             where: { user: { id: userId } },
+            relations: ['user'],
             order: {
                 date: order,
             },

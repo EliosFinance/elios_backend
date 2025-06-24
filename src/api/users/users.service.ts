@@ -21,12 +21,12 @@ export class UsersService {
         const hashedPassword = await bcrypt.hashSync(password, 10);
 
         const payload = {
-            client_id: '70395459',
-            client_secret: 'j7IX1ETJ4zyRUt8XucEaSSsuEz/oYhCK',
+            client_id: process.env.POWENS_CLIENT_ID,
+            client_secret: process.env.POWENS_CLIENT_SECRET,
         };
 
         try {
-            const response = await axios.post('https://lperrenot-sandbox.biapi.pro/2.0/auth/init', payload);
+            const response = await axios.post(`${process.env.POWENS_CLIENT_URL}auth/init`, payload);
             const { auth_token, id_user } = response.data;
             const user = new User();
             user.username = username;
@@ -78,6 +78,37 @@ export class UsersService {
         return this.userRepository.findOne({
             where: { id },
             relations: ['transactions', 'friends', 'notifications'],
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                transactions: true,
+                friends: true,
+                powens_id: true,
+                powens_token: true,
+                readArticles: true,
+                savedArticles: true,
+                likedArticles: true,
+                update_date: true,
+                creation_date: true,
+                emailVerified: true,
+                profileComplete: true,
+                pinConfigured: true,
+                provider: true,
+                notifications: {
+                    id: true,
+                    budget: true,
+                    accountSync: true,
+                    challenges: true,
+                    emails: true,
+                    expenses: true,
+                    friends: true,
+                    learn: true,
+                    monthlyReport: true,
+                    push: true,
+                    weeklyReport: true,
+                },
+            },
         });
     }
 

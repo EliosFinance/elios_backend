@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/ChallengeStepsTypes';
+import { ChallengeEventEnum, ChallengeStepsEnum } from '@src/types/challengeStepsTypes';
 import { CreateChallengeDto } from '../api/challenges/dto/create-challenge-dto';
 import { CategoryChallenge } from '../api/challenges/entities/challenge.entity';
 import { Enterprise } from '../api/enterprises/entities/enterprise.entity';

@@ -33,8 +33,8 @@ export class Transaction {
     @Column({ nullable: true })
     wording: string;
 
-    @Column('simple-array', { nullable: true })
-    categories: [];
+    @Column('text', { array: true, nullable: true })
+    categories: string[];
 
     @Column()
     date_scraped: string;
