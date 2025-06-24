@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -15,9 +15,11 @@ import 'dotenv/config';
 import { ConfigService } from '@nestjs/config';
 import { AppSessionController } from '@src/api/auth/controllers/app-session.controller';
 import { PinAuthController } from '@src/api/auth/controllers/pin-auth.controller';
+import { RegistrationFlowController } from '@src/api/auth/controllers/registration-flow.controller';
 import { PinAuth } from '@src/api/auth/entities/pin-auth.entity';
 import { AppSessionService } from '@src/api/auth/services/app-session.service';
 import { PinAuthService } from '@src/api/auth/services/pin-auth.service';
+import { RegistrationFlowService } from '@src/api/auth/services/registration-flow.service';
 
 @Module({
     imports: [
@@ -29,10 +31,11 @@ import { PinAuthService } from '@src/api/auth/services/pin-auth.service';
             signOptions: { expiresIn: '1h' },
         }),
     ],
-    controllers: [AuthController, PinAuthController, AppSessionController],
+    controllers: [AuthController, PinAuthController, AppSessionController, RegistrationFlowController],
     providers: [
         AuthService,
         PinAuthService,
+        RegistrationFlowService,
         JwtStrategy,
         UsersService,
         RefreshTokenIdsStorage,
@@ -41,6 +44,6 @@ import { PinAuthService } from '@src/api/auth/services/pin-auth.service';
         AppSessionService,
         ConfigService,
     ],
-    exports: [AuthService, PinAuthService, AppSessionService],
+    exports: [AuthService, PinAuthService, AppSessionService, RegistrationFlowService],
 })
 export class AuthModule {}
