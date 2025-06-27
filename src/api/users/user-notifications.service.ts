@@ -2,20 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserNotifications } from './entities/user-notifications.entity';
-import { User } from './entities/user.entity';
-
 @Injectable()
 export class UserNotificationsService {
     constructor(
         @InjectRepository(UserNotifications)
         private readonly userNotificationsRepository: Repository<UserNotifications>,
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>,
     ) {}
 
-    async findOne(user_id: number): Promise<UserNotifications> {
+    async findOne(userId: number): Promise<UserNotifications> {
         const notifications = await this.userNotificationsRepository.findOne({
-            where: { user: { id: user_id } },
+            where: { user: { id: userId } },
         });
 
         if (!notifications) {
