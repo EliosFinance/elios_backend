@@ -9,15 +9,18 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { RequestLogsModule } from '@src/api/request-logs/request-logs.module';
 import { MiddlewareModule } from '@src/middlewares/middleware.module';
 import { RequestLoggerMiddleware } from '@src/middlewares/request-logger.middleware';
+import { StripeModule } from '@src/stripe/stripe.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { LoggingInterceptor } from '../logging.interceptor';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
 import { QuizzModule } from './quizz/quizz.module';
+import { RecommendationsModule } from './recommendations/recommendations.module';
 
 if (process.env.NODE_ENV !== 'production') {
     console.warn('POSTGRES_HOST', process.env.POSTGRES_HOST);
@@ -30,6 +33,7 @@ if (process.env.NODE_ENV !== 'production') {
 @Module({
     imports: [
         // TypeOrmModule.forRoot(dataSource.options),
+        ScheduleModule.forRoot(),
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: String(process.env.POSTGRES_HOST),
@@ -42,6 +46,7 @@ if (process.env.NODE_ENV !== 'production') {
             autoLoadEntities: true,
             logging: false,
         }),
+        StripeModule,
         PowensModule,
         AuthModule,
         UsersModule,
@@ -53,6 +58,7 @@ if (process.env.NODE_ENV !== 'production') {
         ContentTypeModule,
         RequestLogsModule,
         MiddlewareModule,
+        RecommendationsModule,
         PrometheusModule.register(),
     ],
     controllers: [AppController],

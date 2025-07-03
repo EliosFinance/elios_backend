@@ -29,7 +29,7 @@ export class User {
     @Column({ unique: true })
     username: string;
 
-    @Column()
+    @Column({ nullable: true }) // Nullable pour Google OAuth
     password: string;
 
     @Column({ unique: true, default: null })
@@ -40,6 +40,25 @@ export class User {
 
     @Column({ nullable: true })
     powens_id: number;
+
+    // Nouveaux champs pour le flux d'inscription unifié
+    @Column({ default: false })
+    emailVerified: boolean;
+
+    @Column({ default: false })
+    pinConfigured: boolean;
+
+    @Column({ nullable: true })
+    termsAcceptedAt: Date;
+
+    @Column({ default: false })
+    profileComplete: boolean;
+
+    @Column({ type: 'enum', enum: ['email', 'google'], default: 'email' })
+    provider: 'email' | 'google';
+
+    @Column({ nullable: true })
+    googleId: string;
 
     @OneToMany(
         () => Transaction,
@@ -121,5 +140,18 @@ export class User {
 
     async validatePassword(password: string): Promise<boolean> {
         return bcrypt.compare(password, this.password);
+    }
+
+    // Nouvelles méthodes utiles
+    isRegistrationComplete(): boolean {
+        return this.emailVerified && this.pinConfigured && !!this.termsAcceptedAt && this.profileComplete;
+    }
+
+    getNextRegistrationStep(): string | null {
+        if (!this.emailVerified && this.provider !== 'google') return 'email_verification';
+        if (!this.profileComplete) return 'profile_completion';
+        if (!this.pinConfigured) return 'pin_configuration';
+        if (!this.termsAcceptedAt) return 'terms_acceptance';
+        return null;
     }
 }

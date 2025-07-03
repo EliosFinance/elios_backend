@@ -1,14 +1,13 @@
-import { HttpService } from '@nestjs/axios';
-import { Body, Controller, Delete, Get, Param, Post, Query, Redirect, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query, Redirect, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
-import axios from 'axios';
-import { lastValueFrom } from 'rxjs';
+import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { StateService } from '../../state.service';
 import { Public } from '../auth/decorator/public.decorator';
 import { TransactionsService } from '../transactions/transactions.service';
+import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { Connector } from './entities/connector.entity';
 import { PowensService } from './powens.service';
@@ -17,12 +16,9 @@ import { PowensService } from './powens.service';
 @ApiTags('Powens')
 export class PowensController {
     constructor(
-        private readonly httpService: HttpService,
         private readonly powensService: PowensService,
         private readonly usersService: UsersService,
         private readonly transactionsService: TransactionsService,
-        @InjectRepository(Connector)
-        private readonly connectorRepository: Repository<Connector>,
         private readonly stateService: StateService,
     ) {}
 
@@ -41,33 +37,11 @@ export class PowensController {
     @Get('get')
     @Redirect('http://localhost:5173/', 301)
     async getBigToken(@Query() query: any) {
-        const { code, userId } = query;
-        try {
-            const response = await lastValueFrom(
-                this.httpService.post(`${process.env.POWENS_CLIENT_URL}auth/token/access`, {
-                    code,
-                    client_id: process.env.POWENS_CLIENT_ID,
-                    client_secret: process.env.POWENS_CLIENT_SECRET,
-                }),
-            );
-
-            const tokenData = response.data;
-            await this.usersService.updateUser(userId, {
-                powens_token: tokenData.access_token,
-            });
-            return {
-                url: `http://localhost:5173/?token=${tokenData.access_token}`,
-            };
-        } catch (error: any) {
-            console.error('Error fetching token: ', error);
-        }
+        return await this.powensService.getBigToken(query);
     }
 
     @Get('transactions')
-    async getTransactions(@Req() req: Request) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const { user } = req;
+    async getTransactions(@UserFromRequest() user: User) {
         if (!user.powens_token) {
             throw new Error('No powens token');
         }
@@ -103,11 +77,7 @@ export class PowensController {
     }
 
     @Post('refresh/connection')
-    async refreshConnection(@Req() req: Request, @Body('connection_id') connection_id?: string) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const { user } = req;
-
+    async refreshConnection(@UserFromRequest() user: User, @Body('connection_id') connection_id?: string) {
         if (!connection_id) {
             throw new Error('No connector uuids found.');
         }
@@ -165,46 +135,24 @@ export class PowensController {
     }
 
     @Get('connections')
-    async getConnectionsUsers(@Req() req: Request) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const { user } = req;
+    async getConnectionsUsers(@UserFromRequest() user: User) {
         if (!user.powens_token) {
             throw new Error('No powens token');
         }
 
-        const response = await lastValueFrom(
-            this.httpService.get(
-                `${process.env.POWENS_CLIENT_URL}users/me/connections?expand=connector,accounts,subscriptions`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${user.powens_token}`,
-                    },
-                },
-            ),
-        );
-
-        return response.data.connections;
+        return await this.powensService.getUserConnections(user);
     }
 
     @Delete('delete/connections')
-    async deleteConnection(@Req() req: Request, @Body('connectionId') connectionId: string) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const { user } = req;
+    async deleteConnection(@UserFromRequest() user: User, @Body('connectionId') connectionId: string) {
         if (!user.powens_token) {
             throw new Error('No powens token');
         }
 
-        const response = await axios.delete(
-            `${process.env.POWENS_CLIENT_URL}users/me/connections/${connectionId}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${user.powens_token}`,
-                },
-            },
-        );
+        if (!connectionId) {
+            throw new Error('No connection id provided');
+        }
 
-        return response.data;
+        return await this.powensService.deleteUserConnection(user, connectionId);
     }
 }

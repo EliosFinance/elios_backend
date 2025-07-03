@@ -1,14 +1,31 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpException,
+    HttpStatus,
+    Param,
+    Patch,
+    Post,
+    UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateUserNotificationsDto } from './dto/update-user-notifications.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserNotifications } from './entities/user-notifications.entity';
+import { UserNotificationsService } from './user-notifications.service';
 import { UsersService } from './users.service';
 
 @Controller('users')
 @ApiTags('Users')
 export class UsersController {
-    constructor(private readonly usersService: UsersService) {}
+    constructor(
+        private readonly usersService: UsersService,
+        private readonly userNotificationsService: UserNotificationsService,
+    ) {}
 
     @UseGuards(JwtAuthGuard)
     @Get()
@@ -16,9 +33,31 @@ export class UsersController {
         return this.usersService.findAll();
     }
 
+    @Get('notifications')
+    async getUserNotifications(@UserFromRequest() user: any): Promise<UserNotifications> {
+        if (!user || !user.id) {
+            throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+        }
+        const userId = user.id;
+
+        return this.userNotificationsService.findOne(userId);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.usersService.findOne(+id);
+    }
+
+    @Patch('notifications')
+    async updateUserNotifications(
+        @UserFromRequest() user: any,
+        @Body() updateData: UpdateUserNotificationsDto,
+    ): Promise<UserNotifications> {
+        if (!user || !user.id) {
+            throw new HttpException('Utilisateur non authentifié', HttpStatus.UNAUTHORIZED);
+        }
+        const userId = user.id;
+        return this.userNotificationsService.update(userId, updateData);
     }
 
     @Patch(':id')
@@ -26,18 +65,14 @@ export class UsersController {
         return this.usersService.updateUser(+id, updateUserDto);
     }
 
+    @Post('notifications/trigger/:type')
+    async triggerNotification(@UserFromRequest() user: any, @Param('type') type: string): Promise<string> {
+        const userId = user.id;
+        return this.userNotificationsService.triggerNotification(userId, type as keyof UserNotifications);
+    }
+
     @Delete(':id')
     remove(@Param('id') id: string) {
         return this.usersService.remove(+id);
-    }
-
-    @Patch(':id/notifications')
-    updateNotifications(@Param('id') id: string, @Body() updateUserNotificationsDto: UpdateUserNotificationsDto) {
-        return this.usersService.updateUserNotifications(+id, updateUserNotificationsDto);
-    }
-
-    @Post(':id/notifications/trigger')
-    triggerNotification(@Param('id') id: string, @Body('type') type: string) {
-        return this.usersService.triggerNotification(+id, type);
     }
 }
