@@ -14,9 +14,38 @@ export class StripeService {
         plan,
     }: {
         userId: number;
-        plan: 'monthly' | 'annual';
+        plan: string;
     }) {
-        const amount = plan === 'annual' ? 4799 : 499;
+        let amount: number;
+        let productName: string;
+        switch (plan) {
+            case 'lite_monthly':
+                amount = 199;
+                productName = 'Abonnement Lite Mensuel';
+                break;
+            case 'lite_annual':
+                amount = 1999;
+                productName = 'Abonnement Lite Annuel';
+                break;
+            case 'premium_monthly':
+                amount = 499;
+                productName = 'Abonnement Premium Mensuel';
+                break;
+            case 'premium_annual':
+                amount = 4799;
+                productName = 'Abonnement Premium Annuel';
+                break;
+            case 'famille_monthly':
+                amount = 899;
+                productName = 'Abonnement Famille Mensuel';
+                break;
+            case 'famille_annual':
+                amount = 8999;
+                productName = 'Abonnement Famille Annuel';
+                break;
+            default:
+                throw new Error('Plan inconnu');
+        }
 
         const session = await this.stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -30,7 +59,7 @@ export class StripeService {
                     price_data: {
                         currency: 'eur',
                         product_data: {
-                            name: `Abonnement ${plan === 'annual' ? 'Annuel' : 'Mensuel'}`,
+                            name: productName,
                         },
                         unit_amount: amount,
                     },
