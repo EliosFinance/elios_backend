@@ -8,7 +8,7 @@ export class StripeController {
 
     @UseGuards(AuthGuard('jwt'))
     @Post('create-checkout-session')
-    async createCheckout(@Req() req, @Body('plan') plan: 'monthly' | 'annual') {
+    async createCheckout(@Req() req, @Body('plan') plan: string) {
         const userId = req.user.id;
 
         const session = await this.stripeService.createCheckoutSession({
