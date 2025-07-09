@@ -58,6 +58,7 @@ const Configuration = {
                 'ci-cd',
             ],
         ],
+        'header-max-length': [0, 'always', 144],
     },
 
     prompt: {
