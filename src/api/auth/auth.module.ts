@@ -25,11 +25,12 @@ import { EmailVerificationService } from '@src/api/emails/services/email-verific
 import { EmailService } from '@src/api/emails/services/email.service';
 import { PremiumMarketingService } from '@src/api/emails/services/premium-marketing.service';
 import { TwoFactorAuthService } from '@src/api/emails/services/two-factor-auth.service';
+import { UsedResetToken } from './entities/used-reset-token.entity';
 
 @Module({
     imports: [
         UsersModule,
-        TypeOrmModule.forFeature([User, PinAuth]),
+        TypeOrmModule.forFeature([User, PinAuth, UsedResetToken]),
         PassportModule.register({ defaultStrategy: 'jwt' }),
         EmailsModule,
         JwtModule.register({

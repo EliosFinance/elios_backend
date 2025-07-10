@@ -1,4 +1,6 @@
+import * as crypto from 'crypto';
 import { Body, Controller, Get, Headers, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from '@src/api/auth/auth.service';
 import { Public } from '@src/api/auth/decorator/public.decorator';
@@ -24,6 +26,8 @@ export class RequestPasswordResetDto {
 export class SendPremiumEmailDto {
     reason?: string;
 }
+import { RequestResetPasswordDto } from '../dto/RequestResetPassword.dto';
+import { ResetPasswordDto } from '../dto/ResetPassword.dto';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -150,5 +154,34 @@ export class AuthController {
             isRegistrationComplete: user.isRegistrationComplete(),
             nextRegistrationStep: user.getNextRegistrationStep(),
         };
+    }
+
+    @Public()
+    @Post('request-reset-password')
+    async requestResetPassword(@Body() dto: RequestResetPasswordDto) {
+        await this.authService.requestResetPassword(dto.email);
+        // Toujours retourner un succès pour ne pas révéler si l'email existe
+        return { message: 'Si cet email existe, un lien de réinitialisation a été envoyé.' };
+    }
+
+    @Public()
+    @Post('reset-password')
+    async resetPassword(@Body() dto: ResetPasswordDto) {
+        await this.authService.resetPassword(dto.token, dto.newPassword);
+        return { message: 'Mot de passe réinitialisé avec succès.' };
+    }
+
+    @Public()
+    @Post('validate-reset-token')
+    async validateResetToken(@Body('token') token: string) {
+        try {
+            const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+            const alreadyUsed = await this.authService['usedResetTokenRepo'].findOne({ where: { tokenHash } });
+            if (alreadyUsed) throw new Error('Ce lien de réinitialisation a déjà été utilisé.');
+            await this.authService['jwtService'].verifyAsync(token);
+            return { valid: true };
+        } catch (e: any) {
+            throw new BadRequestException(e.message || 'Token invalide ou expiré');
+        }
     }
 }
