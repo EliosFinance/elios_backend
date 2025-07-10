@@ -364,25 +364,53 @@ export class AuthService {
         }
     }
 
+    /**
+     * Demande de réinitialisation de mot de passe.
+     * - Ne révèle jamais si l'email existe ou non (sécurité).
+     * - Génère un token JWT valable 1h.
+     * - Envoie un email avec le template password_reset si l'utilisateur existe et a un email valide.
+     */
     async requestResetPassword(email: string): Promise<void> {
-        console.log('[DEBUG] Appel à requestResetPassword avec:', email);
-        // Validation du format d'email
+        // Validation stricte du format d'email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            // Pour la sécurité, ne pas révéler si l'email existe ou non
+            // Toujours retourner sans rien révéler
             return;
         }
+
+        // Recherche de l'utilisateur (ne jamais révéler l'existence)
         const user = await this.usersService.findOneByUsernameOrEmail(email);
-        console.log('[DEBUG] Utilisateur trouvé ?', !!user, user?.email);
-        if (!user) {
-            // Pour la sécurité, ne pas révéler si l'email existe ou non
+        if (!user || !user.email) {
+            // Toujours retourner sans rien révéler
             return;
         }
+
+        // Génération du token JWT de reset (1h)
         const payload = { sub: user.id, email: user.email };
         const token = await this.jwtService.signAsync(payload, { expiresIn: '1h' });
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         const resetLink = `${frontendUrl.replace(/\/$/, '')}/reset-password?token=${token}`;
-        console.log(`[DEV] Lien de reset: ${resetLink}`);
+
+        // Envoi de l'email avec la template password_reset
+        try {
+            await this.emailService.sendEmail({
+                to: user.email,
+                templateType: EmailTemplateType.PASSWORD_RESET,
+                variables: {
+                    username: user.username,
+                    resetUrl: resetLink,
+                    expiresIn: '1h',
+                },
+                userId: user.id,
+                metadata: {
+                    resetRequest: true,
+                },
+            });
+            this.logger.log(`[PasswordReset] Email envoyé à ${user.email}`);
+        } catch (error) {
+            // Log interne, mais ne jamais révéler à l'utilisateur
+            this.logger.error(`[PasswordReset] Echec d'envoi d'email: ${error.message}`);
+        }
     }
 
     async resetPassword(token: string, newPassword: string): Promise<void> {
