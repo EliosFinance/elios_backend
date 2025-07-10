@@ -47,7 +47,7 @@ export class EmailVerificationService {
 
         const savedVerification = await this.emailVerificationRepository.save(verification);
 
-        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token+${token}`;
+        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
         await this.emailService.sendEmail({
             to: user.email,
