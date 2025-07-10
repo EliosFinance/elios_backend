@@ -1280,6 +1280,20 @@
   resolved "https://registry.npmjs.org/@faker-js/faker/-/faker-9.3.0.tgz"
   integrity sha512-r0tJ3ZOkMd9xsu3VRfqlFR6cz0V/jFYRswAIpC+m/DIfAUXq7g8N7wTAlhSANySXYGKzGryfDXwtwsY8TxEIDw==
 
+"@fig/complete-commander@^3.0.0":
+  version "3.2.0"
+  resolved "https://registry.npmjs.org/@fig/complete-commander/-/complete-commander-3.2.0.tgz"
+  integrity sha512-1Holl3XtRiANVKURZwgpjCnPuV4RsHp+XC0MhgvyAX/avQwj7F2HUItYOvGi/bXjJCkEzgBZmVfCr0HBA+q+Bw==
+  dependencies:
+    prettier "^3.2.5"
+
+"@golevelup/nestjs-discovery@4.0.3":
+  version "4.0.3"
+  resolved "https://registry.npmjs.org/@golevelup/nestjs-discovery/-/nestjs-discovery-4.0.3.tgz"
+  integrity sha512-8w3CsXHN7+7Sn2i419Eal1Iw/kOjAd6Kb55M/ZqKBBwACCMn4WiEuzssC71LpBMI1090CiDxuelfPRwwIrQK+A==
+  dependencies:
+    lodash "^4.17.21"
+
 "@inquirer/figures@^1.0.3":
   version "1.0.6"
   resolved "https://registry.npmjs.org/@inquirer/figures/-/figures-1.0.6.tgz"
@@ -1665,7 +1679,7 @@
     webpack "5.92.1"
     webpack-node-externals "3.0.0"
 
-"@nestjs/common@^10.0.0", "@nestjs/common@^10.0.0 || ^11.0.0", "@nestjs/common@^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/common@^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0", "@nestjs/common@^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/common@^9.0.0 || ^10.0.0":
+"@nestjs/common@^10.0.0", "@nestjs/common@^10.0.0 || ^11.0.0", "@nestjs/common@^10.x || ^11.0.0", "@nestjs/common@^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/common@^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0", "@nestjs/common@^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/common@^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0", "@nestjs/common@^9.0.0 || ^10.0.0":
   version "10.3.10"
   resolved "https://registry.npmjs.org/@nestjs/common/-/common-10.3.10.tgz"
   integrity sha512-H8k0jZtxk1IdtErGDmxFRy0PfcOAUg41Prrqpx76DQusGGJjsaovs1zjXVD1rZWaVYchfT1uczJ6L4Kio10VNg==
@@ -1683,7 +1697,7 @@
     dotenv-expand "10.0.0"
     lodash "4.17.21"
 
-"@nestjs/core@^10.0.0", "@nestjs/core@^10.0.0 || ^11.0.0", "@nestjs/core@^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/core@^9.0.0 || ^10.0.0":
+"@nestjs/core@^10.0.0", "@nestjs/core@^10.0.0 || ^11.0.0", "@nestjs/core@^10.x || ^11.0.0", "@nestjs/core@^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/core@^8.0.0 || ^9.0.0 || ^10.0.0 || ^11.0.0", "@nestjs/core@^9.0.0 || ^10.0.0":
   version "10.3.10"
   resolved "https://registry.npmjs.org/@nestjs/core/-/core-10.3.10.tgz"
   integrity sha512-ZbQ4jovQyzHtCGCrzK5NdtW1SYO2fHSsgSY1+/9WdruYCUra+JDkWEXgZ4M3Hv480Dl3OXehAmY1wCOojeMyMQ==
@@ -1694,6 +1708,13 @@
     path-to-regexp "3.2.0"
     tslib "2.6.3"
     uid "2.0.2"
+
+"@nestjs/event-emitter@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.npmjs.org/@nestjs/event-emitter/-/event-emitter-3.0.1.tgz"
+  integrity sha512-0Ln/x+7xkU6AJFOcQI9tIhUMXVF7D5itiaQGOyJbXtlAfAIt8gzDdJm+Im7cFzKoWkiW5nCXCPh6GSvdQd/3Dw==
+  dependencies:
+    eventemitter2 "6.4.9"
 
 "@nestjs/jwt@^10.2.0":
   version "10.2.0"
@@ -1991,6 +2012,14 @@
   resolved "https://registry.npmjs.org/@types/http-errors/-/http-errors-2.0.4.tgz"
   integrity sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==
 
+"@types/inquirer@^8.1.3":
+  version "8.2.11"
+  resolved "https://registry.npmjs.org/@types/inquirer/-/inquirer-8.2.11.tgz"
+  integrity sha512-15UboTvxb9SOaPG7CcXZ9dkv8lNqfiAwuh/5WxJDLjmElBt9tbx1/FDsEnJddUBKvN4mlPKvr8FyO1rAmBanzg==
+  dependencies:
+    "@types/through" "*"
+    rxjs "^7.2.0"
+
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0", "@types/istanbul-lib-coverage@^2.0.1":
   version "2.0.6"
   resolved "https://registry.npmjs.org/@types/istanbul-lib-coverage/-/istanbul-lib-coverage-2.0.6.tgz"
@@ -2051,6 +2080,13 @@
   integrity sha512-06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==
   dependencies:
     undici-types "~5.26.4"
+
+"@types/nodemailer@^6.4.17":
+  version "6.4.17"
+  resolved "https://registry.npmjs.org/@types/nodemailer/-/nodemailer-6.4.17.tgz"
+  integrity sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==
+  dependencies:
+    "@types/node" "*"
 
 "@types/passport-jwt@^4.0.1":
   version "4.0.1"
@@ -2123,6 +2159,13 @@
   dependencies:
     "@types/methods" "^1.1.4"
     "@types/superagent" "^8.1.0"
+
+"@types/through@*":
+  version "0.0.33"
+  resolved "https://registry.npmjs.org/@types/through/-/through-0.0.33.tgz"
+  integrity sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==
+  dependencies:
+    "@types/node" "*"
 
 "@types/uuid@^10.0.0":
   version "10.0.0"
@@ -3075,6 +3118,11 @@ combined-stream@^1.0.8:
   dependencies:
     delayed-stream "~1.0.0"
 
+commander@^11.1.0, commander@11.1.0:
+  version "11.1.0"
+  resolved "https://registry.npmjs.org/commander/-/commander-11.1.0.tgz"
+  integrity sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==
+
 commander@^12.1.0:
   version "12.1.0"
   resolved "https://registry.npmjs.org/commander/-/commander-12.1.0.tgz"
@@ -3262,7 +3310,7 @@ cosmiconfig-typescript-loader@^5.0.0:
   dependencies:
     jiti "^1.19.1"
 
-cosmiconfig@^8.2.0, cosmiconfig@>=8.2:
+cosmiconfig@^8.2.0, cosmiconfig@>=8.2, cosmiconfig@8.3.6:
   version "8.3.6"
   resolved "https://registry.npmjs.org/cosmiconfig/-/cosmiconfig-8.3.6.tgz"
   integrity sha512-kcZ6+W5QzcJ3P1Mt+83OUv/oHFqZHIx8DuxG6eZ5RGMERoLqp4BuGjhHLYGK+Kf5XVkQvqBSmAy/nGWN3qDgEA==
@@ -3591,6 +3639,7 @@ electron-to-chromium@^1.5.41:
     "@nestjs/schedule" "^6.0.0"
     "@nestjs/swagger" "^7.4.2"
     "@nestjs/typeorm" "^10.0.2"
+    "@types/nodemailer" "^6.4.17"
     "@willsoto/nestjs-prometheus" "^6.0.2"
     axios "^1.7.7"
     bcrypt "^5.1.1"
@@ -3602,6 +3651,8 @@ electron-to-chromium@^1.5.41:
     elios_backend "file:"
     google-auth-library "^9.15.1"
     ioredis "^5.6.0"
+    nest-commander "^3.17.0"
+    nodemailer "^7.0.5"
     passport "^0.7.0"
     passport-jwt "^4.0.1"
     passport-local "^1.0.0"
@@ -3612,6 +3663,7 @@ electron-to-chromium@^1.5.41:
     rxjs "^7.8.1"
     stripe "^18.0.0"
     typeorm "^0.3.20"
+    uuid "^11.1.0"
     xstate "^5.19.2"
 
 emitter-component@^1.1.1:
@@ -3765,6 +3817,11 @@ event-stream@4.0.1:
     split "^1.0.1"
     stream-combiner "^0.2.2"
     through "^2.3.8"
+
+eventemitter2@6.4.9:
+  version "6.4.9"
+  resolved "https://registry.npmjs.org/eventemitter2/-/eventemitter2-6.4.9.tgz"
+  integrity sha512-JEPTiaOt9f04oa6NOkc4aH+nVp5I3wEjpHbIPqfgCdD5v5bUzy7xQqwcVO2aDQgOWhI28da57HksMrzK9HlRxg==
 
 events@^3.2.0:
   version "3.3.0"
@@ -5910,6 +5967,17 @@ neotraverse@^0.6.18:
   resolved "https://registry.npmjs.org/neotraverse/-/neotraverse-0.6.18.tgz"
   integrity sha512-Z4SmBUweYa09+o6pG+eASabEpP6QkQ70yHj351pQoEXIs8uHbaU2DWVmzBANKgflPa47A50PtB2+NgRpQvr7vA==
 
+nest-commander@^3.17.0:
+  version "3.17.0"
+  resolved "https://registry.npmjs.org/nest-commander/-/nest-commander-3.17.0.tgz"
+  integrity sha512-1R9vppZT2j/9njKiG0zYTDLAyQOj14KdGWdNuhluveK8VXoQepXNb0t09dRNWy4KCWrI7wDZ2tQTEwb43JyHOw==
+  dependencies:
+    "@fig/complete-commander" "^3.0.0"
+    "@golevelup/nestjs-discovery" "4.0.3"
+    commander "11.1.0"
+    cosmiconfig "8.3.6"
+    inquirer "8.2.6"
+
 node-abort-controller@^3.0.1, node-abort-controller@^3.1.1:
   version "3.1.1"
   resolved "https://registry.npmjs.org/node-abort-controller/-/node-abort-controller-3.1.1.tgz"
@@ -5950,6 +6018,11 @@ node-releases@^2.0.18:
   version "2.0.18"
   resolved "https://registry.npmjs.org/node-releases/-/node-releases-2.0.18.tgz"
   integrity sha512-d9VeXT4SJ7ZeOqGX6R5EM022wpL+eWPooLI+5UpWn2jCT1aosUQEhQP214x33Wkwx3JQMvIm+tIoVOdodFS40g==
+
+nodemailer@^7.0.5:
+  version "7.0.5"
+  resolved "https://registry.npmjs.org/nodemailer/-/nodemailer-7.0.5.tgz"
+  integrity sha512-nsrh2lO3j4GkLLXoeEksAMgAOqxOv6QumNRVQTJwKH4nuiww6iC2y7GyANs9kRAxCexg3+lTWM3PZ91iLlVjfg==
 
 nopt@^5.0.0:
   version "5.0.0"
@@ -6417,6 +6490,11 @@ postgres-interval@^1.1.0:
   integrity sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==
   dependencies:
     xtend "^4.0.0"
+
+prettier@^3.2.5:
+  version "3.6.2"
+  resolved "https://registry.npmjs.org/prettier/-/prettier-3.6.2.tgz"
+  integrity sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==
 
 pretty-format@^29.0.0, pretty-format@^29.7.0:
   version "29.7.0"
@@ -7546,12 +7624,27 @@ uuid@^10.0.0:
   resolved "https://registry.npmjs.org/uuid/-/uuid-10.0.0.tgz"
   integrity sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==
 
+uuid@^11.1.0:
+  version "11.1.0"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-11.1.0.tgz"
+  integrity sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==
+
 uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.npmjs.org/uuid/-/uuid-8.3.2.tgz"
   integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
-uuid@^9.0.0, uuid@^9.0.1, uuid@9.0.1:
+uuid@^9.0.0:
+  version "9.0.1"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz"
+  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
+
+uuid@^9.0.1:
+  version "9.0.1"
+  resolved "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz"
+  integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==
+
+uuid@9.0.1:
   version "9.0.1"
   resolved "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz"
   integrity sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==

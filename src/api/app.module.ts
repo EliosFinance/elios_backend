@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import 'dotenv/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EmailsModule } from '@src/api/emails/emails.module';
 import { RequestLogsModule } from '@src/api/request-logs/request-logs.module';
 import { MiddlewareModule } from '@src/middlewares/middleware.module';
 import { RequestLoggerMiddleware } from '@src/middlewares/request-logger.middleware';
@@ -59,6 +60,7 @@ if (process.env.NODE_ENV !== 'production') {
         RequestLogsModule,
         MiddlewareModule,
         RecommendationsModule,
+        EmailsModule,
         PrometheusModule.register(),
     ],
     controllers: [AppController],
