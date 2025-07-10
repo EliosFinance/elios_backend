@@ -20,12 +20,18 @@ import { PinAuth } from '@src/api/auth/entities/pin-auth.entity';
 import { AppSessionService } from '@src/api/auth/services/app-session.service';
 import { PinAuthService } from '@src/api/auth/services/pin-auth.service';
 import { RegistrationFlowService } from '@src/api/auth/services/registration-flow.service';
+import { EmailsModule } from '@src/api/emails/emails.module';
+import { EmailVerificationService } from '@src/api/emails/services/email-verification.service';
+import { EmailService } from '@src/api/emails/services/email.service';
+import { PremiumMarketingService } from '@src/api/emails/services/premium-marketing.service';
+import { TwoFactorAuthService } from '@src/api/emails/services/two-factor-auth.service';
 
 @Module({
     imports: [
         UsersModule,
         TypeOrmModule.forFeature([User, PinAuth]),
         PassportModule.register({ defaultStrategy: 'jwt' }),
+        EmailsModule,
         JwtModule.register({
             secret: process.env.JWT_SECRET || 'secret',
             signOptions: { expiresIn: '1h' },
@@ -43,7 +49,18 @@ import { RegistrationFlowService } from '@src/api/auth/services/registration-flo
         JwtRefreshTokenStrategy,
         AppSessionService,
         ConfigService,
+        EmailService,
+        EmailVerificationService,
+        TwoFactorAuthService,
+        PremiumMarketingService,
     ],
-    exports: [AuthService, PinAuthService, AppSessionService, RegistrationFlowService],
+    exports: [
+        AuthService,
+        PinAuthService,
+        AppSessionService,
+        RegistrationFlowService,
+        EmailVerificationService,
+        TwoFactorAuthService,
+    ],
 })
 export class AuthModule {}

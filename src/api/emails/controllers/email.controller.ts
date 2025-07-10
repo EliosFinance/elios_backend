@@ -1,14 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Public } from '@src/api/auth/decorator/public.decorator';
 import { JwtAuthGuard } from '@src/api/auth/guards/jwt-auth.guard';
+import { SendEmailDto } from '@src/api/emails/dto/email.dto';
 import { EmailVerificationService } from '@src/api/emails/services/email-verification.service';
 import { EmailService } from '@src/api/emails/services/email.service';
 import { PremiumMarketingService } from '@src/api/emails/services/premium-marketing.service';
 import { TwoFactorAuthService } from '@src/api/emails/services/two-factor-auth.service';
 import { User } from '@src/api/users/entities/user.entity';
 import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
-import { SendEmailDto } from '../dto/email.dto';
 
 @ApiTags('Email System')
 @Controller('emails')
