@@ -49,18 +49,7 @@ import { TwoFactorAuthService } from '@src/api/emails/services/two-factor-auth.s
         JwtRefreshTokenStrategy,
         AppSessionService,
         ConfigService,
-        EmailService,
-        EmailVerificationService,
-        TwoFactorAuthService,
-        PremiumMarketingService,
     ],
-    exports: [
-        AuthService,
-        PinAuthService,
-        AppSessionService,
-        RegistrationFlowService,
-        EmailVerificationService,
-        TwoFactorAuthService,
-    ],
+    exports: [AuthService, PinAuthService, AppSessionService, RegistrationFlowService],
 })
 export class AuthModule {}
