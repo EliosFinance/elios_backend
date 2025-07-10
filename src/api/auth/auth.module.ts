@@ -20,11 +20,12 @@ import { PinAuth } from '@src/api/auth/entities/pin-auth.entity';
 import { AppSessionService } from '@src/api/auth/services/app-session.service';
 import { PinAuthService } from '@src/api/auth/services/pin-auth.service';
 import { RegistrationFlowService } from '@src/api/auth/services/registration-flow.service';
+import { UsedResetToken } from './entities/used-reset-token.entity';
 
 @Module({
     imports: [
         UsersModule,
-        TypeOrmModule.forFeature([User, PinAuth]),
+        TypeOrmModule.forFeature([User, PinAuth, UsedResetToken]),
         PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.register({
             secret: process.env.JWT_SECRET || 'secret',

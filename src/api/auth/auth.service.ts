@@ -1,3 +1,4 @@
+import * as crypto from 'crypto';
 import { Inject, Injectable, Logger, UnauthorizedException, forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,7 +8,10 @@ import { OAuth2Client } from 'google-auth-library';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
+import { RequestResetPasswordDto } from './dto/RequestResetPassword.dto';
+import { ResetPasswordDto } from './dto/ResetPassword.dto';
 import { SignInDto } from './dto/sign-in.dto';
+import { UsedResetToken } from './entities/used-reset-token.entity';
 import { RefreshTokenIdsStorage } from './refresh-token-ids-storage';
 import { PinAuthService } from './services/pin-auth.service';
 import { JwtRefreshTokenStrategy } from './strategy/jwt-refresh-token.strategy';
@@ -23,6 +27,8 @@ export class AuthService {
         @Inject(forwardRef(() => PinAuthService)) private readonly pinAuthService: PinAuthService,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        @InjectRepository(UsedResetToken)
+        private readonly usedResetTokenRepo: Repository<UsedResetToken>,
     ) {
         // @ts-ignore
         this.googleClient = new OAuth2Client(
@@ -220,5 +226,49 @@ export class AuthService {
     async invalidateUserTokens(userId: number): Promise<void> {
         await this.refreshTokenIdsStorage.invalidate(userId);
         this.logger.log(`All tokens invalidated for user ${userId}`);
+    }
+
+    async requestResetPassword(email: string): Promise<void> {
+        console.log('[DEBUG] Appel à requestResetPassword avec:', email);
+        // Validation du format d'email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            // Pour la sécurité, ne pas révéler si l'email existe ou non
+            return;
+        }
+        const user = await this.usersService.findOneByUsernameOrEmail(email);
+        console.log('[DEBUG] Utilisateur trouvé ?', !!user, user?.email);
+        if (!user) {
+            // Pour la sécurité, ne pas révéler si l'email existe ou non
+            return;
+        }
+        const payload = { sub: user.id, email: user.email };
+        const token = await this.jwtService.signAsync(payload, { expiresIn: '1h' });
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const resetLink = `${frontendUrl.replace(/\/$/, '')}/reset-password?token=${token}`;
+        console.log(`[DEV] Lien de reset: ${resetLink}`);
+    }
+
+    async resetPassword(token: string, newPassword: string): Promise<void> {
+        let payload: any;
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        // Vérifie si le token a déjà été utilisé
+        const alreadyUsed = await this.usedResetTokenRepo.findOne({ where: { tokenHash } });
+        if (alreadyUsed) {
+            throw new Error('Ce lien de réinitialisation a déjà été utilisé.');
+        }
+        try {
+            payload = await this.jwtService.verifyAsync(token);
+        } catch (e) {
+            throw new Error('Token invalide ou expiré');
+        }
+        const user = await this.usersService.findOne(payload.sub);
+        if (!user) {
+            throw new Error('Utilisateur non trouvé');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await this.usersService.updateUser(user.id, { password: hashedPassword });
+        // Blackliste le token après usage
+        await this.usedResetTokenRepo.save({ tokenHash, userId: user.id });
     }
 }
