@@ -22,6 +22,7 @@ import { PremiumMarketingController } from '@src/api/emails/controllers/premium-
 import { TwoFactorAuthController } from '@src/api/emails/controllers/two-factor-auth.controller';
 // Controllers
 import { EmailController } from './controllers/email.controller';
+import {SeedEmailTemplatesCommand} from "@src/api/emails/commands/seed-templates.command";
 
 @Module({
     imports: [TypeOrmModule.forFeature([EmailTemplate, EmailLog, EmailVerification, TwoFactorAuth, User])],
@@ -37,6 +38,7 @@ import { EmailController } from './controllers/email.controller';
         EmailVerificationService,
         TwoFactorAuthService,
         PremiumMarketingService,
+        SeedEmailTemplatesCommand,
         { provide: APP_GUARD, useClass: JwtAuthGuard },
     ],
     exports: [EmailService, EmailVerificationService, TwoFactorAuthService, PremiumMarketingService],
