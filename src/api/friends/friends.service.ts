@@ -103,7 +103,6 @@ export class FriendsService {
     }
 
     async getFriendsWithScores(userId: number) {
-        /* 1. Récupère les relations d’amitié */
         const relations = await this.friendsRepo.find({
             where: [
                 { fromUser: { id: userId }, status: 'ACCEPTED' },
@@ -112,17 +111,14 @@ export class FriendsService {
             relations: ['fromUser', 'toUser'],
         });
 
-        /* 2. Isole les amis (côté opposé à userId) */
         const friends = relations.map((rel) => (rel.fromUser.id === userId ? rel.toUser : rel.fromUser));
         const friendIds = friends.map((f) => f.id);
 
-        /* 3. Un seul fetch pour tous les quizz */
         const allQuizResults = await this.quizzFinisherRepository.find({
             where: { user: { id: In(friendIds) } },
-            relations: ['quizz'], // pour récupérer le titre
+            relations: ['quizz'],
         });
 
-        /* 4. Un seul fetch pour tous les challenges terminés */
         const finishedStates = ['REWARD_TO_CLAIM', 'REWARD_CLAIMED', 'END'];
         const allFinishedUTC = await this.userToChallengeRepository.find({
             where: {
@@ -132,7 +128,6 @@ export class FriendsService {
             relations: ['challenge'],
         });
 
-        /* 5. Regroupe les infos pour chaque ami */
         return friends.map((friend) => {
             const quizzes = allQuizResults.filter((qr) => qr.user.id === friend.id);
             const challenges = allFinishedUTC.filter((utc) => utc.user.id === friend.id);
@@ -142,7 +137,7 @@ export class FriendsService {
             return {
                 id: friend.id,
                 username: friend.username,
-                score: totalScore, // score total quizz
+                score: totalScore,
                 quizzes: quizzes.map((q) => ({
                     id: q.quizz.id,
                     title: q.quizz.title,
@@ -151,7 +146,7 @@ export class FriendsService {
                 challengesCompleted: challenges.map((c) => ({
                     id: c.challenge.id,
                     title: c.challenge.title,
-                    state: c.currentState, // si tu veux l’état final
+                    state: c.currentState,
                 })),
             };
         });

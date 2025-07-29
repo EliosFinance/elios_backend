@@ -1,11 +1,7 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Post } from '@nestjs/common';
 import { ParseIntPipe, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { InjectRepository } from '@nestjs/typeorm';
-import { RewardType } from '@src/api/challenges/entities/reward.entity';
-import { QuizzFinisher } from '@src/api/quizz/entities/quizz-finisher';
 import { UserLightType } from 'src/api/users/dto/user-light.dto';
-import { Repository } from 'typeorm';
 import { AcceptFriendsDto } from './dto/accept-friend.dto';
 import { AddFriendsDto } from './dto/add-friend.dto';
 import { RejectFriendsDto } from './dto/reject-friend.dto';
