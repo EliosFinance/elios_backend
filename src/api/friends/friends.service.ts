@@ -175,7 +175,7 @@ export class FriendsService {
 
         return requests.map((r) => r.toUser);
     }
-
+    //code parrainage
     async addFriendByReferralCode(currentUserId: number, referralCode: string) {
         const currentUser = await this.userRepo.findOneBy({ id: currentUserId });
         const parrain = await this.userRepo.findOneBy({ referralCode });
