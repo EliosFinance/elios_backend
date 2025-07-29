@@ -10,6 +10,7 @@ services:
       - powens_network
     volumes:
       - powens_volume:/data
+
   postgres:
     image: 'postgres'
     ports:
@@ -20,7 +21,24 @@ services:
       - POSTGRES_DB=elios
       - POSTGRES_PASSWORD=eliosbackendpassword
 
-      
+
+  mailpit:
+    image: 'axllent/mailpit'
+    container_name: 'elios_mailpit'
+    ports:
+      - '1026:1025'
+      - '8026:8025'
+    environment:
+      - MP_SMTP_AUTH_ACCEPT_ANY=1
+      - MP_SMTP_AUTH_ALLOW_INSECURE=1
+      - MP_MAX_MESSAGE=1000
+      - MP_DATABASE=/data/mailpit.db
+      - MP_SMTP_SSL_CERT=""
+      - MP_SMTP_SSL_KEY=""
+    networks:
+      - powens_network
+    volumes:
+      - mailpit_data:/data
 
 
 networks:
@@ -29,3 +47,4 @@ networks:
 
 volumes:
   powens_volume:
+  mailpit_data:

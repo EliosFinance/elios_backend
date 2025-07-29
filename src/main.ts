@@ -2,6 +2,7 @@ import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerDocumentOptions, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './api/app.module';
+import {CommandFactory} from "nest-commander";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule, { cors: true });
