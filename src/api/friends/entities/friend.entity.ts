@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, Up
 import { User } from '../../users/entities/user.entity';
 
 @Entity('friends')
-export class Friends {
+export class Friend {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -20,4 +20,7 @@ export class Friends {
 
     @UpdateDateColumn()
     updatedAt: Date;
+
+    @Column({ default: false })
+    isParrainage: boolean;
 }

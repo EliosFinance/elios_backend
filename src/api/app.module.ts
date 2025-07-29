@@ -19,6 +19,7 @@ import { LoggingInterceptor } from '../logging.interceptor';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArticlesModule } from './articles/articles.module';
+import { FriendsModule } from './friends/friends.module';
 import { QuizzModule } from './quizz/quizz.module';
 import { RecommendationsModule } from './recommendations/recommendations.module';
 
@@ -41,7 +42,6 @@ if (process.env.NODE_ENV !== 'production') {
             username: String(process.env.POSTGRES_USER),
             password: String(process.env.POSTGRES_PASSWORD),
             database: String(process.env.POSTGRES_DB),
-            entities: ['**/entity/*.entity.ts'],
             synchronize: true,
             autoLoadEntities: true,
             logging: false,
@@ -59,6 +59,7 @@ if (process.env.NODE_ENV !== 'production') {
         RequestLogsModule,
         MiddlewareModule,
         RecommendationsModule,
+        FriendsModule,
         PrometheusModule.register(),
     ],
     controllers: [AppController],
