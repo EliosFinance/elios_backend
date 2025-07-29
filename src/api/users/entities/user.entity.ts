@@ -1,5 +1,7 @@
+import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import {
+    BeforeInsert,
     Column,
     CreateDateColumn,
     Entity,
@@ -53,6 +55,15 @@ export class User {
 
     @Column({ default: false })
     profileComplete: boolean;
+
+    @Column({ unique: true, nullable: true })
+    referralCode: string;
+
+    @BeforeInsert()
+    generateReferralCode() {
+        const randomSuffix = randomBytes(3).toString('hex').toUpperCase();
+        this.referralCode = randomSuffix;
+    }
 
     @Column({ type: 'enum', enum: ['email', 'google'], default: 'email' })
     provider: 'email' | 'google';

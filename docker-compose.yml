@@ -21,6 +21,7 @@ services:
       - POSTGRES_DB=elios
       - POSTGRES_PASSWORD=eliosbackendpassword
 
+
   mailpit:
     image: 'axllent/mailpit'
     container_name: 'elios_mailpit'
@@ -38,6 +39,7 @@ services:
       - powens_network
     volumes:
       - mailpit_data:/data
+
 
 networks:
   powens_network:

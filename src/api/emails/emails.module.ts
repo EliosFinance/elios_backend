@@ -16,13 +16,13 @@ import { EmailService } from './services/email.service';
 import { PremiumMarketingService } from './services/premium-marketing.service';
 import { TwoFactorAuthService } from './services/two-factor-auth.service';
 
+import { SeedEmailTemplatesCommand } from '@src/api/emails/commands/seed-templates.command';
 import { EmailTemplatesController } from '@src/api/emails/controllers/email-templates.controller';
 import { EmailVerificationController } from '@src/api/emails/controllers/email-verification.controller';
 import { PremiumMarketingController } from '@src/api/emails/controllers/premium-marketing.controller';
 import { TwoFactorAuthController } from '@src/api/emails/controllers/two-factor-auth.controller';
 // Controllers
 import { EmailController } from './controllers/email.controller';
-import {SeedEmailTemplatesCommand} from "@src/api/emails/commands/seed-templates.command";
 
 @Module({
     imports: [TypeOrmModule.forFeature([EmailTemplate, EmailLog, EmailVerification, TwoFactorAuth, User])],

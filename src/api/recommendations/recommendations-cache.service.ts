@@ -113,8 +113,10 @@ export class RecommendationsCacheService {
             return dataSize + overhead;
         };
 
-        const totalMemoryUsageBytes = Array.from(this.cache.values())
-            .reduce((total, entry) => total + calculateEntrySize(entry), 0);
+        const totalMemoryUsageBytes = Array.from(this.cache.values()).reduce(
+            (total, entry) => total + calculateEntrySize(entry),
+            0,
+        );
 
         const memoryUsage = `${Math.round((totalMemoryUsageBytes / (1024 * 1024)) * 100) / 100} MB`;
         return {

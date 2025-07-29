@@ -20,7 +20,6 @@ export const seedChallenges = async () => {
 
     console.log('Seeding challenges...');
 
-    // Récupérer les entreprises existantes
     let enterprises: Enterprise[] = [];
     try {
         const response = await axiosClient.get('/enterprises');

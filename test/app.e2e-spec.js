@@ -1,8 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const testing_1 = require("@nestjs/testing");
-const request = require("supertest");
-const app_module_1 = require("../src/api/app.module");
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
+const testing_1 = require('@nestjs/testing');
+const request = require('supertest');
+const app_module_1 = require('../src/api/app.module');
 describe('AppController (e2e)', () => {
     let app;
     beforeEach(async () => {

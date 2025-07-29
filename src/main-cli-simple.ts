@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
+import { config } from 'dotenv';
 import { AppModule } from './api/app.module';
 import { EmailService } from './api/emails/services/email.service';
 import { DefaultTemplatesSeeder } from './api/emails/templates/default-templates';
-import { config } from 'dotenv';
 
 // Charger les variables d'environnement
 config();
@@ -13,7 +13,7 @@ async function seedEmailTemplates() {
     try {
         // Créer le contexte d'application NestJS avec l'AppModule existant
         const app = await NestFactory.createApplicationContext(AppModule, {
-            logger: ['error', 'warn', 'log']
+            logger: ['error', 'warn', 'log'],
         });
 
         console.log('✅ Connexion à la base de données réussie');
@@ -31,7 +31,6 @@ async function seedEmailTemplates() {
         // Fermer l'application
         await app.close();
         process.exit(0);
-
     } catch (error) {
         console.error('❌ Erreur lors du seeding:', error.message);
         console.error(error.stack);
