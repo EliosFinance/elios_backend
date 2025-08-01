@@ -36,20 +36,28 @@ networks:
 EOF
 fi
 
-# IMPORTANT: Arrêter complètement les containers existants
-echo "Stopping and removing existing containers..."
+# Check if docker-compose exists and is executable
 if command -v docker-compose &> /dev/null; then
-    docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans || echo "No existing containers"
-elif [ -f "/usr/local/bin/docker-compose" ]; then
-    /usr/local/bin/docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans || echo "No existing containers"
-fi
+    echo "Stopping only application services (api, worker)..."
+    docker-compose -f docker-compose.prod.yml stop api worker || echo "Warning: Failed to stop some services"
 
-# Forcer la reconstruction des images pour s'assurer des nouvelles variables
-echo "Rebuilding and starting containers with updated environment..."
-if command -v docker-compose &> /dev/null; then
-    docker-compose -f docker-compose.prod.yml up -d --build --force-recreate
+    echo "Starting containers with updated environment..."
+    docker-compose -f docker-compose.prod.yml up -d --build --force-recreate --remove-orphans api worker || echo "Warning: docker-compose up failed"
+
+    echo "Ensuring database services are running..."
+    docker-compose -f docker-compose.prod.yml up -d postgres redis || echo "Warning: Failed to start database services"
+
 elif [ -f "/usr/local/bin/docker-compose" ]; then
-    /usr/local/bin/docker-compose -f docker-compose.prod.yml up -d --build --force-recreate
+    echo "Stopping only application services (api, worker)..."
+    /usr/local/bin/docker-compose -f docker-compose.prod.yml stop api worker || echo "Warning: Failed to stop some services"
+
+    echo "Starting containers with updated environment..."
+    /usr/local/bin/docker-compose -f docker-compose.prod.yml up -d --build --force-recreate --remove-orphans api worker || echo "Warning: docker-compose up failed"
+
+    echo "Ensuring database services are running..."
+    /usr/local/bin/docker-compose -f docker-compose.prod.yml up -d postgres redis || echo "Warning: Failed to start database services"
+else
+    echo "WARNING: Docker Compose not found, skipping container startup"
 fi
 
 # Configure Nginx

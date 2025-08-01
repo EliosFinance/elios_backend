@@ -47,15 +47,21 @@ export class EmailService {
                 },
             } as any);
         } else {
+            // Configuration spécifique pour AWS SES
             this.transporter = nodemailer.createTransport({
                 host: process.env.SMTP_HOST,
                 port: parseInt(process.env.SMTP_PORT || '587'),
-                secure: process.env.SMTP_SECURE === 'true',
+                secure: false, // false pour port 587 (STARTTLS)
+                requireTLS: true, // Force l'utilisation de STARTTLS
                 auth: {
                     user: process.env.SMTP_USER,
                     pass: process.env.SMTP_PASSWORD,
                 },
-            } as any);
+                tls: {
+                    // Ne pas rejeter les certificats non autorisés en dev
+                    rejectUnauthorized: process.env.NODE_ENV === 'production',
+                },
+            });
         }
 
         this.logger.log('Email transporter initialized');
