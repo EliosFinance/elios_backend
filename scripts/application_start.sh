@@ -36,15 +36,20 @@ networks:
 EOF
 fi
 
-# Check if docker-compose exists and is executable
+# IMPORTANT: Arrêter complètement les containers existants
+echo "Stopping and removing existing containers..."
 if command -v docker-compose &> /dev/null; then
-    echo "Starting containers with docker-compose..."
-    docker-compose -f docker-compose.prod.yml up -d --force-recreate  || echo "Warning: docker-compose up failed"
+    docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans || echo "No existing containers"
 elif [ -f "/usr/local/bin/docker-compose" ]; then
-    echo "Starting containers with /usr/local/bin/docker-compose..."
-    /usr/local/bin/docker-compose -f docker-compose.prod.yml up -d --force-recreate || echo "Warning: docker-compose up failed"
-else
-    echo "WARNING: Docker Compose not found, skipping container startup"
+    /usr/local/bin/docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans || echo "No existing containers"
+fi
+
+# Forcer la reconstruction des images pour s'assurer des nouvelles variables
+echo "Rebuilding and starting containers with updated environment..."
+if command -v docker-compose &> /dev/null; then
+    docker-compose -f docker-compose.prod.yml up -d --build --force-recreate
+elif [ -f "/usr/local/bin/docker-compose" ]; then
+    /usr/local/bin/docker-compose -f docker-compose.prod.yml up -d --build --force-recreate
 fi
 
 # Configure Nginx
