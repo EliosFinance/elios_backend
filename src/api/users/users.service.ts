@@ -26,6 +26,7 @@ export class UsersService {
         };
 
         try {
+            console.log(process.env.POWENS_CLIENT_URL);
             const response = await axios.post(`${process.env.POWENS_CLIENT_URL}auth/init`, payload);
             const { auth_token, id_user } = response.data;
             const user = new User();

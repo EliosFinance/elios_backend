@@ -20,13 +20,19 @@ export class TransactionsService {
         const apiUrl = `${process.env.POWENS_CLIENT_URL}users/me/transactions?limit=1000`;
         // const apiUrl = `${process.env.POWENS_CLIENT_URL}users/me/transactions?expand=categories&limit=1000`;
 
-        let response = await lastValueFrom(
-            this.httpService.get(apiUrl, {
-                headers: {
-                    Authorization: `Bearer ${powensToken}`,
-                },
-            }),
-        );
+        let response: any | null = null;
+        try {
+            response = await lastValueFrom(
+                this.httpService.get(apiUrl, {
+                    headers: {
+                        Authorization: `Bearer ${powensToken}`,
+                    },
+                }),
+            );
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+            throw new Error('Failed to fetch transactions from Powens API');
+        }
 
         let transactions = response.data.transactions;
         await this.saveTransactions(transactions, userId);
