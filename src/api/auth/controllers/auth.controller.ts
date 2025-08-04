@@ -97,13 +97,13 @@ export class AuthController {
         return this.authService.signIn(signInDto);
     }
 
-    @Public()
-    @Post('verify-2fa')
-    @ApiOperation({ summary: 'Verify 2FA code and complete sign in' })
-    @ApiResponse({ status: 200, description: '2FA verified, sign in completed' })
-    async verify2FA(@Body() verify2FADto: Verify2FADto) {
-        return this.authService.verify2FAAndLogin(verify2FADto.userId, verify2FADto.code);
-    }
+    // @Public()
+    // @Post('verify-2fa')
+    // @ApiOperation({ summary: 'Verify 2FA code and complete sign in' })
+    // @ApiResponse({ status: 200, description: '2FA verified, sign in completed' })
+    // async verify2FA(@Body() verify2FADto: Verify2FADto) {
+    //     return this.authService.verify2FAAndLogin(verify2FADto.userId, verify2FADto.code);
+    // }
 
     @Public()
     @Post('google')

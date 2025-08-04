@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Headers, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { PinSetupRoute } from '@src/api/auth/decorator/pin-setup.decorator';
 import { UserFromRequest } from '@src/helpers/jwt/user.decorator';
 import { User } from '../../users/entities/user.entity';
 import { AppStatusDto, ResetPinDto, SetupPinDto, VerifyPinDto } from '../dto/pin-auth.dto';
@@ -18,6 +19,7 @@ export class PinAuthController {
     @Post('setup')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth('access-token')
+    @PinSetupRoute()
     @ApiOperation({ summary: 'Set up a new PIN for the authenticated user' })
     @ApiResponse({ status: 201, description: 'PIN successfully set up' })
     @ApiResponse({ status: 400, description: 'Invalid PIN format or length' })

@@ -31,15 +31,20 @@ export class TransactionsService {
             );
         } catch (error) {
             console.error('Error fetching transactions:', error);
-            throw new Error('Failed to fetch transactions from Powens API');
+            // throw new Error('Failed to fetch transactions from Powens API');
+            return {
+                message: 'Failed to fetch transactions from Powens API',
+                error: error.message,
+            };
         }
 
         let transactions = response.data.transactions;
+        console.log('response', response.data);
         await this.saveTransactions(transactions, userId);
 
         while (response.data._links.next) {
             response = await lastValueFrom(
-                this.httpService.get(response.data._links.next, {
+                this.httpService.get(response.data._links.next.href, {
                     headers: {
                         Authorization: `Bearer ${powensToken}`,
                     },

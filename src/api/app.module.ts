@@ -8,8 +8,10 @@ import { PowensModule } from './powens/powens.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { UsersModule } from './users/users.module';
 import 'dotenv/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
+import { JwtAuthGuard } from '@src/api/auth/guards/jwt-auth.guard';
+import { PinConfiguredGuard } from '@src/api/auth/guards/pin-configured.guard';
 import { EmailsModule } from '@src/api/emails/emails.module';
 import { RequestLogsModule } from '@src/api/request-logs/request-logs.module';
 import { MiddlewareModule } from '@src/middlewares/middleware.module';
@@ -69,6 +71,14 @@ if (process.env.NODE_ENV !== 'production') {
         {
             provide: APP_INTERCEPTOR,
             useClass: LoggingInterceptor,
+        },
+        {
+            provide: APP_GUARD,
+            useClass: JwtAuthGuard,
+        },
+        {
+            provide: APP_GUARD,
+            useClass: PinConfiguredGuard,
         },
     ],
 })

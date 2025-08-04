@@ -114,6 +114,7 @@ export class AuthService {
             await this.pinAuthService.unlockPin(user.id);
         }
 
+        /*
         // Gestion 2FA conditionnelle (pas pour Google OAuth)
         if (user.provider !== 'google') {
             try {
@@ -128,6 +129,7 @@ export class AuthService {
                 // Continuer la connexion normale si 2FA échoue
             }
         }
+        */
 
         // Connexion normale (Google ou après 2FA)
         return this.completeLogin(user);

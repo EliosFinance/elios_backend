@@ -17,6 +17,7 @@ import { AppSessionController } from '@src/api/auth/controllers/app-session.cont
 import { PinAuthController } from '@src/api/auth/controllers/pin-auth.controller';
 import { RegistrationFlowController } from '@src/api/auth/controllers/registration-flow.controller';
 import { PinAuth } from '@src/api/auth/entities/pin-auth.entity';
+import { PinConfiguredGuard } from '@src/api/auth/guards/pin-configured.guard';
 import { AppSessionService } from '@src/api/auth/services/app-session.service';
 import { PinAuthService } from '@src/api/auth/services/pin-auth.service';
 import { RegistrationFlowService } from '@src/api/auth/services/registration-flow.service';
@@ -49,6 +50,7 @@ import { TwoFactorAuthService } from '@src/api/emails/services/two-factor-auth.s
         JwtRefreshTokenStrategy,
         AppSessionService,
         ConfigService,
+        PinConfiguredGuard,
     ],
     exports: [AuthService, PinAuthService, AppSessionService, RegistrationFlowService],
 })
